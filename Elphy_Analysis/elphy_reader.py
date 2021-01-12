@@ -961,7 +961,7 @@ def _read_behavior_parameters(xpar, lines):
     return None
 
 
-def read_behavior(fname):
+def read_behavior(fname, verbose=False):
     ef = ElphyFile(fname, read_data=True)
 
     nt, = ef.episodes[0].channels[0].data.shape
@@ -985,21 +985,24 @@ def read_behavior(fname):
         for obj in objects:
             if isinstance(obj, ElphyFile.DBrecord):
                 if i == -1:
-                    print("Ignoring DBrecord before first episode", obj.dict)
+                    if verbose:
+                        print("Ignoring DBrecord before first episode", obj.dict)
                 elif obj.name == 'PG0.MPAR2':
                     # Parameters used to be saved in a DBrecord, now they
                     # are saved in Memo table
                     if menu_par is None:
                         menu_par = obj.dict
                     else:
-                        print("Problem ! Several set of parameters in file")
+                        if verbose:
+                            print("Problem ! Several set of parameters in file")
                 elif obj.name == 'PG0.EPREPORT':
                     if ep_info[i] == {}:
                         ep_info[i] = obj.dict
                     else:
-                        print('Several info DBrecord in episode', i, '!')
-                        print('-> Keeping:', ep_info[i])
-                        print('-> Ignoring:', obj.dict)
+                        if verbose:
+                            print('Several info DBrecord in episode', i, '!')
+                            print('-> Keeping:', ep_info[i])
+                            print('-> Ignoring:', obj.dict)
                 else:
                     raise Exception(
                         'Unexpected DBrecord with name ' + obj.name)
@@ -1015,7 +1018,8 @@ def read_behavior(fname):
                 else:
                     raise Exception('Unexpected memo with name ' + obj.name)
             else:
-                print('Object of type ' + str(type(obj)) + ' not handled by function read_beavior')
+                if verbose:
+                    print('Object of type ' + str(type(obj)) + ' not handled by function read_beavior')
 
     # Merge dates and ep_info into vectors
     for key in ep_info[0].keys():
