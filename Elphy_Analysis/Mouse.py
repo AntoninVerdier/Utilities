@@ -3,6 +3,8 @@ import pickle
 import numpy as np
 import pandas as pd
 import elphy_reader as ertd
+import matplotlib.pyplot as plt
+
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow,Flow
@@ -68,7 +70,7 @@ class Mouse(object):
 
         for row in range(11, len(all_data[mouse_idx]), 6):
             dates.append(all_data[mouse_idx][row])
-            weights.append(all_data[mouse_idx][row + 1])
+            weights.append(float(all_data[mouse_idx][row + 1]))
             water_profile.append(all_data[mouse_idx][row + 2])
             health.append(all_data[mouse_idx][row + 3])
             protocol.append(all_data[mouse_idx][row + 4])
@@ -80,9 +82,10 @@ class Mouse(object):
                     'health': health,
                     'protocol': protocol,
                     'estimated_perf': estimated_perf}
-       
+
         df_beh = pd.DataFrame(data=dict_beh)
-        df_beh.set_index('date', inplace=True)
+        df_beh['date'] = pd.to_datetime(df_beh['date'], format='%d/%m/%Y')
+
 
         return df_beh
 
@@ -110,7 +113,7 @@ class Mouse(object):
         """
         files = []
         for file in os.listdir(folder):
-            files.append(File(os.path.join(folder, file)))
+            files.append(self.File(os.path.join(folder, file)))
 
         return files
 
@@ -118,12 +121,42 @@ class Mouse(object):
     def save(self):
         pass
 
+    def weight_fig(self):
+        weights = self.df_beh['weight'] 
+        date = self.df_beh['date']
+        print(weights[0])
+        
+        plt.figure(figsize=(12, 9))
+        
+        ax = plt.subplot(111)    
+        ax.spines["top"].set_visible(False)    
+        ax.spines["right"].set_visible(False)  
+        ax.grid(c='gainsboro')
+        ax.plot(date, weights, 'ro-')
+
+        mults = [0.1, -0.1, 0.15, -0.15, 0.2, -0.2]
+        cs = ['chartreuse', 'chartreuse', 'gold', 'gold', 'firebrick', 'firebrick']
+        
+        for mult, c in zip(mults, cs):
+            ax.axhline(y=weights[0]+weights[0]*mult, c=c, ls='--', linewidth=1)
+
+        plt.ylim([20, 31])   
+        plt.title(label='Weight evolution of {}'.format(self.ID),
+                  fontsize=15,
+                  fontstyle='italic')
+
+        # For further improvment, add a legend for dashed lines
+
+
+        plt.show()
+
+
     class File(object):
         """DAT file as an object for better further use"""
         def __init__(self, path):
             self.path = path
-            __filename_parser(os.path.basename(self.path))
-            __extract_data(self.path)
+            self.__filename_parser(os.path.basename(self.path))
+            self.__extract_data(self.path)
 
         def __extract_data(self, path):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
@@ -133,7 +166,7 @@ class Mouse(object):
             self.tr_corr = vectors['correct']
 
         def __filename_parser(self, filename):
-            parsed_filename = filname.split('_')
+            parsed_filename = filename.split('_')
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
-mouse = Mouse(ID='660267')
+

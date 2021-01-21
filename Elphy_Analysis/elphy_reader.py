@@ -80,7 +80,7 @@ elphy_types = (
 def disp(x):
     if hasattr(x, '__dict__'):
         x = vars(x)
-    pprint(x)
+    #pprint(x)
 
 
 def _read_extended(file_handle):
@@ -304,7 +304,7 @@ class ElphyFile(object):
         if self._ignoredblocks:
             msg = "All blocks of type '" + "', '".join(
                 self._ignoredblocks) + "' were ignored while reading Elphy file"
-            print(msg)
+            #print(msg)
 
         # Close file
         file_handle.close()
@@ -354,7 +354,7 @@ class ElphyFile(object):
         block_end = offset + block_size
         identity, string_size = _read_string(file_handle, return_size=True)
         block_size_rem = block_size - struct.calcsize('< i') - string_size
-        print(identity)
+        #print(identity)
 
         # Read block according to its identifier:
 
@@ -917,8 +917,8 @@ class ElphyFile(object):
                         elif typee == 9:  # gvDComplex (2*64 bits)
                             values.append(fread(f, 'd') + 1j * fread(f, 'd'))
                         else:
-                            print("Unknown data type flag in DBrecord: " + str(
-                                typee) + ", cannot proceed reading the record.")
+                            # print("Unknown data type flag in DBrecord: " + str(
+                            #     typee) + ", cannot proceed reading the record.")
                             values = values + ['cannot be read'] * (npar - i)
                             break
                 f.seek(pos1)
@@ -985,24 +985,24 @@ def read_behavior(fname, verbose=False):
         for obj in objects:
             if isinstance(obj, ElphyFile.DBrecord):
                 if i == -1:
-                    if verbose:
-                        print("Ignoring DBrecord before first episode", obj.dict)
+                    pass
+                    #print("Ignoring DBrecord before first episode", obj.dict)
                 elif obj.name == 'PG0.MPAR2':
                     # Parameters used to be saved in a DBrecord, now they
                     # are saved in Memo table
                     if menu_par is None:
                         menu_par = obj.dict
                     else:
-                        if verbose:
-                            print("Problem ! Several set of parameters in file")
+                        pass
+                        # print("Problem ! Several set of parameters in file")
                 elif obj.name == 'PG0.EPREPORT':
                     if ep_info[i] == {}:
                         ep_info[i] = obj.dict
                     else:
-                        if verbose:
-                            print('Several info DBrecord in episode', i, '!')
-                            print('-> Keeping:', ep_info[i])
-                            print('-> Ignoring:', obj.dict)
+                        # print('Several info DBrecord in episode', i, '!')
+                        # print('-> Keeping:', ep_info[i])
+                        # print('-> Ignoring:', obj.dict)
+                        pass
                 else:
                     raise Exception(
                         'Unexpected DBrecord with name ' + obj.name)
@@ -1018,9 +1018,8 @@ def read_behavior(fname, verbose=False):
                 else:
                     raise Exception('Unexpected memo with name ' + obj.name)
             else:
-                if verbose:
-                    print('Object of type ' + str(type(obj)) + ' not handled by function read_beavior')
-
+                #print('Object of type ' + str(type(obj)) + ' not handled by function read_beavior')
+                pass
     # Merge dates and ep_info into vectors
     for key in ep_info[0].keys():
         vectors[key] = np.array([x[key] for x in ep_info])
@@ -1072,7 +1071,7 @@ def elphy_to_klusta(elphy_name, klusta_name=None, ep_nums='all',
                   'w') as txtf:  # Initialize text file
             # Do elphy -> klusta conversion for each episode
             for iep in ep_nums:
-                print('Converting episode ' + str(iep))
+                #print('Converting episode ' + str(iep))
                 ep_vecs = ef.episodes[iep].get_data()  # Load episode data
                 ch_lengths = np.array([len(vec) for vec in ep_vecs])
                 assert np.all(ch_lengths[chan_nums] == ch_lengths[chan_nums[0]])  # Check that all required channels have the same length in a given episode
