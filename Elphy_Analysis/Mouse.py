@@ -6,7 +6,7 @@ import elphy_reader as ertd
 class Mouse(object):
 	"""docstring for Mouse"""
 	def __init__(self, ID=0, sex='M', strain='C57BL/6J'):
-		self.ID = ID
+		self.ID = None
 		self.sex = sex
 		self.strain = strain
 		self.elphy = {}
@@ -16,23 +16,23 @@ class Mouse(object):
 	def populate(self, folder):
 		""" Look for data to populate the object
 		"""
-		dat_files = os.listdir(folder)
-
 		self.ID = os.path.basename(os.path.normpath(folder))
-		__process_elphy_at_file(folder)
+		elphy_data = __process_elphy_at_file(folder)
 
+		self.elphy = elphy_data
 
 	def __get_data_from_gsheet(self):
 		""" Retrieve behavioural ùetadat from Google Sheet"""
-		pass
+		spreedsheet_id = '1PNvkKMTGbVxGGG-2eyWFEtG9dcv3ZVb9m9zVixjRlfc'
 
 	def __process_elphy_at_file(self, folder):
 		""" Order rax elphy data into an usable dictionary
 		"""
+		files = []
 		for file in os.listdir(folder):
+			files.append(File(os.path.join(folder, file)))
 
-
-		return _
+		return files
 
 
 	def save(self):
