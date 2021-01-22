@@ -131,6 +131,7 @@ class Mouse(object):
         ax = plt.subplot(111)    
         ax.spines["top"].set_visible(False)    
         ax.spines["right"].set_visible(False)  
+        ax.spines["bottom"].set_visible(False)  
         ax.grid(c='gainsboro')
         ax.plot(date, weights, 'ro-')
 
@@ -149,6 +150,15 @@ class Mouse(object):
 
 
         plt.show()
+
+    def perf_fig(self):
+        """ Show evolution of mouse's performance following the task's type"""
+        pass
+
+    def mouse_summary(self):
+        """ Display general infos about the current mice (average weight, sex, strain, etc., maybe age ??)
+        """
+        pass
 
 
     class File(object):
@@ -170,3 +180,5 @@ class Mouse(object):
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
 
+mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660270')
+mouse.weight_fig()
