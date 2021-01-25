@@ -10,7 +10,9 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow,Flow
 from google.auth.transport.requests import Request
 
-from auth import spid
+from Hearis import get_P_lick
+
+#from auth import spid
 
 class Mouse(object):
     """docstring for Mouse"""
@@ -30,7 +32,7 @@ class Mouse(object):
 
     def __get_data_from_gsheet(self):
         """ Retrieve behavioural etadat from Google Sheet"""
-        SAMPLE_SPREADSHEET_ID_input = spid()
+        SAMPLE_SPREADSHEET_ID_input = '1PNvkKMTGbVxGGG-2eyWFEtG9dcv3ZVb9m9zVixjRlfc'
         SAMPLE_RANGE_NAME = 'A1:AA1000'
 
         creds = self.__google_credentials()
@@ -122,26 +124,26 @@ class Mouse(object):
         pass
 
     def weight_fig(self):
-        weights = self.df_beh['weight'] 
+        weights = self.df_beh['weight']
         date = self.df_beh['date']
         print(weights[0])
-        
+
         plt.figure(figsize=(12, 9))
-        
-        ax = plt.subplot(111)    
-        ax.spines["top"].set_visible(False)    
-        ax.spines["right"].set_visible(False)  
-        ax.spines["bottom"].set_visible(False)  
+
+        ax = plt.subplot(111)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["bottom"].set_visible(False)
         ax.grid(c='gainsboro')
         ax.plot(date, weights, 'ro-')
 
         mults = [0.1, -0.1, 0.15, -0.15, 0.2, -0.2]
         cs = ['chartreuse', 'chartreuse', 'gold', 'gold', 'firebrick', 'firebrick']
-        
+
         for mult, c in zip(mults, cs):
             ax.axhline(y=weights[0]+weights[0]*mult, c=c, ls='--', linewidth=1)
 
-        plt.ylim([20, 31])   
+        plt.ylim([20, 31])
         plt.title(label='Weight evolution of {}'.format(self.ID),
                   fontsize=15,
                   fontstyle='italic')
@@ -151,9 +153,32 @@ class Mouse(object):
 
         plt.show()
 
-    def perf_fig(self):
+    def perf_fig(self, tag='DIS', stims=['blank', '12k', '20k'], last=True):
         """ Show evolution of mouse's performance following the task's type"""
-        pass
+        if tag:
+        	files = [file for file in self.elphy if file.tag == tag]
+
+        if last:
+        	files = [files[-1]]
+        print(files)
+        print(files[0].date)
+
+        tr_type = [f.tr_type for f in files]
+        correct_tr = [f.tr_corr for f in files]
+
+
+
+        probs = get_P_lick(tr_type, correct_tr)
+
+        plt.figure(figsize=(12, 9))
+        ax = plt.subplot(111)
+
+        ax.bar(stims, probs)
+        plt.show()
+
+
+
+
 
     def mouse_summary(self):
         """ Display general infos about the current mice (average weight, sex, strain, etc., maybe age ??)
@@ -180,5 +205,5 @@ class Mouse(object):
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
 
-mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660270')
-mouse.weight_fig()
+mouse = Mouse(path='/home/pouple/PhD/Data/660270')
+mouse.perf_fig()
