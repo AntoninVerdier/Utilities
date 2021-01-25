@@ -153,32 +153,40 @@ class Mouse(object):
 
         plt.show()
 
-    def perf_fig(self, tag='DIS', stims=['blank', '12k', '20k'], last=True):
+    def perf_fig(self, tag='DIS', stims=['blank', '12k', '20k'], last=False):
         """ Show evolution of mouse's performance following the task's type"""
         if tag:
         	files = [file for file in self.elphy if file.tag == tag]
 
         if last:
         	files = [files[-1]]
-        print(files)
-        print(files[0].date)
 
-        tr_type = [f.tr_type for f in files]
-        correct_tr = [f.tr_corr for f in files]
+        correct_tr = [100*sum(f.tr_corr)/len(f.tr_corr) for f in files]
+        dates = [f.date for f in files]
+        print(dates, correct_tr)
+
+        dates = pd.to_datetime(dates, format='%d%m%Y')
 
 
+        correct_tr = [correct_tr[i] for i in np.argsort(dates)]
+        dates = np.sort(dates)
 
-        probs = get_P_lick(tr_type, correct_tr)
-
+      
         plt.figure(figsize=(12, 9))
         ax = plt.subplot(111)
 
-        ax.bar(stims, probs)
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["bottom"].set_visible(False)
+        ax.yaxis.grid(c='gainsboro', ls='--')
+
+
+        ax.plot(dates, correct_tr)
+        ax.set_ylim(0, 100)
+        ax.set_yticks(np.linspace(0, 100, 11))
         plt.show()
 
-
-
-
+        return dates, correct_tr
 
     def mouse_summary(self):
         """ Display general infos about the current mice (average weight, sex, strain, etc., maybe age ??)
@@ -205,5 +213,5 @@ class Mouse(object):
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
 
-mouse = Mouse(path='/home/pouple/PhD/Data/660270')
+mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660270')
 mouse.perf_fig()
