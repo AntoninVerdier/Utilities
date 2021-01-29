@@ -11,6 +11,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow,Flow
 from google.auth.transport.requests import Request
 
 from Hearis import get_P_lick
+from collections import Counter
 
 #from auth import spid
 
@@ -72,7 +73,7 @@ class Mouse(object):
 
         for row in range(11, len(all_data[mouse_idx]), 6):
             dates.append(all_data[mouse_idx][row])
-            weights.append(float(all_data[mouse_idx][row + 1]))
+            weights.append(all_data[mouse_idx][row + 1])
             water_profile.append(all_data[mouse_idx][row + 2])
             health.append(all_data[mouse_idx][row + 3])
             protocol.append(all_data[mouse_idx][row + 4])
@@ -153,40 +154,70 @@ class Mouse(object):
 
         plt.show()
 
-    def perf_fig(self, tag='DIS', stims=['blank', '12k', '20k'], last=False):
+    def perf_fig(self, tag=['DIS', 'PC'], stims=['blank', '12k', '20k'], last=False):
         """ Show evolution of mouse's performance following the task's type"""
         if tag:
-        	files = [file for file in self.elphy if file.tag == tag]
+        	files = [file for file in self.elphy if file.tag in tag]
 
         if last:
         	files = [files[-1]]
 
         correct_tr = [100*sum(f.tr_corr)/len(f.tr_corr) for f in files]
         dates = [f.date for f in files]
-        print(dates, correct_tr)
+        tags = [f.tag for f in files]
 
         dates = pd.to_datetime(dates, format='%d%m%Y')
 
 
         correct_tr = [correct_tr[i] for i in np.argsort(dates)]
+        tags = [tags[i] for i in np.argsort(dates)]
         dates = np.sort(dates)
 
-      
+        if len(files) > 1:
+            plt.figure(figsize=(12, 9))
+            ax = plt.subplot(111)
+
+            ax.spines["top"].set_visible(False)
+            ax.spines["right"].set_visible(False)
+            ax.spines["bottom"].set_visible(False)
+            ax.yaxis.grid(c='gainsboro', ls='--')
+
+
+            ax.plot(dates, correct_tr)
+            ax.set_ylim(0, 100)
+            ax.set_yticks(np.linspace(0, 100, 11))
+            plt.show()
+
+        return dates, correct_tr
+
+    def psychoacoustic(self, tag='PC', lick_treshold=4, last=False, stim_freqs=None):
+        files = [file for file in self.elphy if file.tag in tag]
+
+        licks = [f.tr_licks for f in files]
+        tasks = [f.tr_type for f in files]
+            
+        tasks, licks = np.array(tasks).reshape(1, -1)[0], np.array(licks).reshape(1, -1)[0]
+
+        licks = (licks >= lick_treshold)
+        P_lick = {key:sum(tasks*licks == i+1)/sum(tasks == i+1) for i, key in enumerate(list(set(tasks)))}
+        print(P_lick)
+        print(sum(licks)/len(licks))
+
+        sorted_P_licks = sorted(P_lick.items())
+        frequencies, prob = zip(*sorted_P_licks)
+
         plt.figure(figsize=(12, 9))
         ax = plt.subplot(111)
 
-        ax.spines["top"].set_visible(False)
-        ax.spines["right"].set_visible(False)
-        ax.spines["bottom"].set_visible(False)
-        ax.yaxis.grid(c='gainsboro', ls='--')
+        if stim_freqs is not None: 
+            ax.plot(stim_freqs, prob)
+        else:
+            ax.plot(frequencies, prob)
 
 
-        ax.plot(dates, correct_tr)
-        ax.set_ylim(0, 100)
-        ax.set_yticks(np.linspace(0, 100, 11))
         plt.show()
 
-        return dates, correct_tr
+
 
     def mouse_summary(self):
         """ Display general infos about the current mice (average weight, sex, strain, etc., maybe age ??)
@@ -214,4 +245,6 @@ class Mouse(object):
 
 
 mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660270')
-mouse.perf_fig()
+#mouse.psychoacoustic(stim_freqs=np.geomspace(6e3, 16e3, 16))
+_, corr = mouse.perf_fig(tag=['DIS', 'PC'])
+print(corr)
