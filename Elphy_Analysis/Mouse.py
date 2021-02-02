@@ -73,7 +73,7 @@ class Mouse(object):
 
         for row in range(11, len(all_data[mouse_idx]), 6):
             dates.append(all_data[mouse_idx][row])
-            weights.append(all_data[mouse_idx][row + 1])
+            weights.append(np.float(all_data[mouse_idx][row + 1]))
             water_profile.append(all_data[mouse_idx][row + 2])
             health.append(all_data[mouse_idx][row + 3])
             protocol.append(all_data[mouse_idx][row + 4])
@@ -127,7 +127,6 @@ class Mouse(object):
     def weight_fig(self):
         weights = self.df_beh['weight']
         date = self.df_beh['date']
-        print(weights[0])
 
         plt.figure(figsize=(12, 9))
 
@@ -144,7 +143,7 @@ class Mouse(object):
         for mult, c in zip(mults, cs):
             ax.axhline(y=weights[0]+weights[0]*mult, c=c, ls='--', linewidth=1)
 
-        plt.ylim([20, 31])
+        plt.ylim([weights[0]-5, weights[0]+5])
         plt.title(label='Weight evolution of {}'.format(self.ID),
                   fontsize=15,
                   fontstyle='italic')
@@ -190,8 +189,11 @@ class Mouse(object):
 
         return dates, correct_tr
 
-    def psychoacoustic(self, tag='PC', lick_treshold=4, last=False, stim_freqs=None):
+    def psychoacoustic(self, tag='PC', lick_treshold=4, last=True, stim_freqs=None):
         files = [file for file in self.elphy if file.tag in tag]
+
+        if last:
+            files = [files[-1]]
 
         licks = [f.tr_licks for f in files]
         tasks = [f.tr_type for f in files]
@@ -200,17 +202,18 @@ class Mouse(object):
 
         licks = (licks >= lick_treshold)
         P_lick = {key:sum(tasks*licks == i+1)/sum(tasks == i+1) for i, key in enumerate(list(set(tasks)))}
-        print(P_lick)
-        print(sum(licks)/len(licks))
+
 
         sorted_P_licks = sorted(P_lick.items())
         frequencies, prob = zip(*sorted_P_licks)
 
         plt.figure(figsize=(12, 9))
         ax = plt.subplot(111)
+        ax.set_xscale('log')
 
         if stim_freqs is not None: 
             ax.plot(stim_freqs, prob)
+            ax.axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
         else:
             ax.plot(frequencies, prob)
 
@@ -244,7 +247,8 @@ class Mouse(object):
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
 
-mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660270')
-#mouse.psychoacoustic(stim_freqs=np.geomspace(6e3, 16e3, 16))
+mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660459')
+mouse.weight_fig()
+mouse.psychoacoustic(stim_freqs=np.geomspace(6e3, 16e3, 16))
 _, corr = mouse.perf_fig(tag=['DIS', 'PC'])
 print(corr)
