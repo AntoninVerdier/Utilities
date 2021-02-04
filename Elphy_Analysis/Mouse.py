@@ -189,20 +189,18 @@ class Mouse(object):
 
         return dates, correct_tr
 
-    def psychoacoustic(self, tag='PC', lick_treshold=4, last=True, stim_freqs=None):
+    def psychoacoustic(self, tag='PC', lick_treshold=5, last=True, stim_freqs=None):
         files = [file for file in self.elphy if file.tag in tag]
 
         if last:
             files = [files[-1]]
 
-        licks = [f.tr_licks for f in files]
-        tasks = [f.tr_type for f in files]
-            
-        tasks, licks = np.array(tasks).reshape(1, -1)[0], np.array(licks).reshape(1, -1)[0]
+        licks = np.array([item for f in files for item in f.tr_licks])
+        tasks = np.array([item for f in files for item in f.tr_type])
 
         licks = (licks >= lick_treshold)
-        P_lick = {key:sum(tasks*licks == i+1)/sum(tasks == i+1) for i, key in enumerate(list(set(tasks)))}
 
+        P_lick = {key:sum(tasks*licks == key)/sum(tasks == key) for key in list(set(tasks))}
 
         sorted_P_licks = sorted(P_lick.items())
         frequencies, prob = zip(*sorted_P_licks)
@@ -248,7 +246,7 @@ class Mouse(object):
 
 
 mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660459')
-mouse.weight_fig()
+#mouse.weight_fig()
 mouse.psychoacoustic(stim_freqs=np.geomspace(6e3, 16e3, 16))
 _, corr = mouse.perf_fig(tag=['DIS', 'PC'])
 print(corr)
