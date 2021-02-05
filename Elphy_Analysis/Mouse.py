@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import elphy_reader as ertd
 import matplotlib.pyplot as plt
-
+import matplotlib.dates as mdates
 
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow,Flow
@@ -124,10 +124,7 @@ class Mouse(object):
     def save(self):
         pass
 
-    def weight_fig(self):
-        weights = self.df_beh['weight']
-        date = self.df_beh['date']
-
+    def __weight_fig(self, weights, dates):
         plt.figure(figsize=(12, 9))
 
         ax = plt.subplot(111)
@@ -135,7 +132,7 @@ class Mouse(object):
         ax.spines["right"].set_visible(False)
         ax.spines["bottom"].set_visible(False)
         ax.grid(c='gainsboro')
-        ax.plot(date, weights, 'ro-')
+        ax.plot(dates, weights, 'ro-')
 
         mults = [0.1, -0.1, 0.15, -0.15, 0.2, -0.2]
         cs = ['chartreuse', 'chartreuse', 'gold', 'gold', 'firebrick', 'firebrick']
@@ -153,13 +150,38 @@ class Mouse(object):
 
         plt.show()
 
-    def perf_fig(self, tag=['DIS', 'PC'], stims=['blank', '12k', '20k'], last=False):
-        """ Show evolution of mouse's performance following the task's type"""
+    def weight(self, plot=True):
+        weights = self.df_beh['weight']
+        dates = self.df_beh['date']
+
+        if plot: self.__weight_fig(weights, dates)
+
+        return weights, dates
+
+    def __perf_fig(self, dates, correct_tr):
+        """ Plot evolution of mouse's performance following the task's type"""
+
+        plt.figure(figsize=(12, 9))
+        ax = plt.subplot(111)
+
+        ax.spines["top"].set_visible(False)
+        ax.spines["right"].set_visible(False)
+        ax.spines["bottom"].set_visible(False)
+        ax.yaxis.grid(c='gainsboro', ls='--')
+
+
+        ax.plot(dates, correct_tr)
+        ax.set_ylim(0, 100)
+        ax.set_yticks(np.linspace(0, 100, 11))
+        plt.show()
+    
+    def perf(self, tag=['DIS', 'PC'], stims=['blank', '12k', '20k'], last=False, plot=True):
+        """ Compute evolution of mouse's performance following the task's type"""
         if tag:
-        	files = [file for file in self.elphy if file.tag in tag]
+            files = [file for file in self.elphy if file.tag in tag]
 
         if last:
-        	files = [files[-1]]
+            files = [files[-1]]
 
         correct_tr = [100*sum(f.tr_corr)/len(f.tr_corr) for f in files]
         dates = [f.date for f in files]
@@ -172,24 +194,26 @@ class Mouse(object):
         tags = [tags[i] for i in np.argsort(dates)]
         dates = np.sort(dates)
 
-        if len(files) > 1:
-            plt.figure(figsize=(12, 9))
-            ax = plt.subplot(111)
+        if len(files) > 1 and plot:
+            self.__perf_fig(dates, correct_tr)
 
-            ax.spines["top"].set_visible(False)
-            ax.spines["right"].set_visible(False)
-            ax.spines["bottom"].set_visible(False)
-            ax.yaxis.grid(c='gainsboro', ls='--')
+        return correct_tr, dates
 
+    def __psychoacoustic_fig(self, frequencies, prob, stim_freqs):
 
-            ax.plot(dates, correct_tr)
-            ax.set_ylim(0, 100)
-            ax.set_yticks(np.linspace(0, 100, 11))
-            plt.show()
+        plt.figure(figsize=(12, 9))
+        ax = plt.subplot(111)
+        ax.set_xscale('log')
 
-        return dates, correct_tr
+        if stim_freqs is not None: 
+            ax.plot(stim_freqs, prob)
+            ax.axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
+        else:
+            ax.plot(frequencies, prob)
 
-    def psychoacoustic(self, tag='PC', lick_treshold=5, last=True, stim_freqs=None):
+        plt.show()
+
+    def psychoacoustic(self, tag='PC', lick_treshold=5, last=True, stim_freqs=None, plot=True):
         files = [file for file in self.elphy if file.tag in tag]
 
         if last:
@@ -205,25 +229,68 @@ class Mouse(object):
         sorted_P_licks = sorted(P_lick.items())
         frequencies, prob = zip(*sorted_P_licks)
 
-        plt.figure(figsize=(12, 9))
-        ax = plt.subplot(111)
-        ax.set_xscale('log')
+        if plot: self.__psychoacoustic_fig(frequencies, prob, stim_freqs)
 
-        if stim_freqs is not None: 
-            ax.plot(stim_freqs, prob)
-            ax.axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
-        else:
-            ax.plot(frequencies, prob)
+        return frequencies, prob
 
-
-        plt.show()
-
-
-
-    def mouse_summary(self):
+    def summary(self, tag=['PC'], stim_freqs=None, last=False):
         """ Display general infos about the current mice (average weight, sex, strain, etc., maybe age ??)
         """
-        pass
+        weights, dates_w = self.weight(plot=False)
+        correct_tr, dates_p = self.perf(tag=tag, plot=False)
+        frequencies, prob = self.psychoacoustic(tag=tag, plot=False, last=last)
+
+        fig = plt.figure(constrained_layout=True, figsize=(12, 9))
+        gs = fig.add_gridspec(4, 4)
+
+        ax1 = fig.add_subplot(gs[0:2, 0:2])
+        ax2 = fig.add_subplot(gs[0:2, 2:4])
+        ax3 = fig.add_subplot(gs[2:4, :])
+
+   
+        ax1.grid(c='gainsboro')
+        ax1.plot(dates_w, weights, 'ro-')
+        ax1.set_ylim([weights[0]-5, weights[0]+5])
+        ax1.set_title(label='Weight evolution',
+                      fontsize=13,
+                      fontstyle='italic')
+
+        mults = [0.1, -0.1, 0.15, -0.15, 0.2, -0.2]
+        cs = ['chartreuse', 'chartreuse', 'gold', 'gold', 'firebrick', 'firebrick']
+
+        for mult, c in zip(mults, cs):
+            ax1.axhline(y=weights[0]+weights[0]*mult, c=c, ls='--', linewidth=1)
+
+        ax2.set_xscale('log')
+        if stim_freqs is not None: 
+            ax2.plot(stim_freqs, prob)
+            ax2.axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
+        else:
+            ax2.plot(frequencies, prob)
+
+        ax2.set_title(label='Psychoacoustic',
+                      fontsize=13,
+                      fontstyle='italic')
+
+        ax3.yaxis.grid(c='gainsboro', ls='--')
+        ax3.set_ylim(0, 100)
+        ax3.set_yticks(np.linspace(0, 100, 11))
+        ax3.plot(dates_p, correct_tr, 'o-')
+
+        ax3.set_title(label='Psychophysic',
+                      fontsize=13,
+                      fontstyle='italic')
+       
+        locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
+        formatter = mdates.ConciseDateFormatter(locator)
+        ax1.xaxis.set_major_locator(locator)
+        ax1.xaxis.set_major_formatter(formatter)
+        ax3.xaxis.set_major_locator(locator)
+        ax3.xaxis.set_major_formatter(formatter)
+
+        plt.suptitle('{}'.format(self.ID), fontsize=18)
+        plt.show()
+
 
 
     class File(object):
@@ -245,8 +312,5 @@ class Mouse(object):
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
 
-mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660459')
-#mouse.weight_fig()
-mouse.psychoacoustic(stim_freqs=np.geomspace(6e3, 16e3, 16))
-_, corr = mouse.perf_fig(tag=['DIS', 'PC'])
-print(corr)
+mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660462')
+mouse.summary(tag=['DIS', 'PC'], stim_freqs=np.geomspace(6e3, 16e3, 16))
