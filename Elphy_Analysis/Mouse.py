@@ -17,8 +17,9 @@ from collections import Counter
 
 class Mouse(object):
     """docstring for Mouse"""
-    def __init__(self, path=None, ID=None):
+    def __init__(self, path=None, ID=None, output='../Output'):
         self.ID = ID
+        self.output = output
 
         if self.ID:
             self.df_beh = self.__get_data_from_gsheet()
@@ -312,5 +313,5 @@ class Mouse(object):
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
 
-mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660462')
+mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660461')
 mouse.summary(tag=['DIS', 'PC'], stim_freqs=np.geomspace(6e3, 16e3, 16))
