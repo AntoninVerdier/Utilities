@@ -1,5 +1,6 @@
 import os
 import pickle
+import datetime
 import numpy as np
 import pandas as pd
 import elphy_reader as ertd
@@ -23,8 +24,8 @@ class Mouse(object):
 
         if self.ID:
             self.df_beh = self.__get_data_from_gsheet()
-        else:
-            print('Please provide an ID to retrieve data from Google Sheets')
+        # else:
+        #     print('Please provide an ID to retrieve data from Google Sheets')
         if path:
             self.ID = os.path.basename(os.path.normpath(path))
             self.elphy = self.__process_elphy_at_file(path)
@@ -118,7 +119,11 @@ class Mouse(object):
         files = []
         for file in os.listdir(folder):
             files.append(self.File(os.path.join(folder, file)))
+       
+        sorted_dates = np.argsort([datetime.datetime.strptime(f.date, '%d%m%Y') for f in files])
 
+        files = [files[i] for i in sorted_dates]
+        
         return files
 
 
@@ -171,18 +176,15 @@ class Mouse(object):
         ax.yaxis.grid(c='gainsboro', ls='--')
 
 
-        ax.plot(dates, correct_tr)
+        ax.plot(dates, correct_tr, 'o-')
         ax.set_ylim(0, 100)
         ax.set_yticks(np.linspace(0, 100, 11))
         plt.show()
     
-    def perf(self, tag=['DIS', 'PC'], stims=['blank', '12k', '20k'], last=False, plot=True):
+    def perf(self, tag=['DIS', 'PC'], plot=True):
         """ Compute evolution of mouse's performance following the task's type"""
         if tag:
             files = [file for file in self.elphy if file.tag in tag]
-
-        if last:
-            files = [files[-1]]
 
         correct_tr = [100*sum(f.tr_corr)/len(f.tr_corr) for f in files]
         dates = [f.date for f in files]
@@ -214,15 +216,24 @@ class Mouse(object):
 
         plt.show()
 
-    def psychoacoustic(self, tag='PC', lick_treshold=5, last=True, stim_freqs=None, plot=True):
-        files = [file for file in self.elphy if file.tag in tag]
+    def psychoacoustic(self, tag='PC', lick_treshold=5, last=True, stim_freqs=None, plot=True, date=None, threshold=None):
+        if date:
+            files = [file for file in self.elphy if file.date == date]
+        else:   
+            files = [file for file in self.elphy if file.tag in tag]
 
         if last:
             files = [files[-1]]
 
+        if threshold:
+            ps, _ = self.perf(tag=tag)
+            files = [f for f, p in zip(files, ps) if p > threshold]
+
         licks = np.array([item for f in files for item in f.tr_licks])
         tasks = np.array([item for f in files for item in f.tr_type])
 
+
+        ######### Careful !!! Must have the same lick threshold than during the task, retrieve from elphy
         licks = (licks >= lick_treshold)
 
         P_lick = {key:sum(tasks*licks == key)/sum(tasks == key) for key in list(set(tasks))}
@@ -234,12 +245,12 @@ class Mouse(object):
 
         return frequencies, prob
 
-    def summary(self, tag=['PC'], stim_freqs=None, last=False):
+    def summary(self, tag=['PC'], stim_freqs=None, last=False, name='summary', show=False, threshold=None):
         """ Display general infos about the current mice (average weight, sex, strain, etc., maybe age ??)
         """
         weights, dates_w = self.weight(plot=False)
         correct_tr, dates_p = self.perf(tag=tag, plot=False)
-        frequencies, prob = self.psychoacoustic(tag=tag, plot=False, last=last)
+        frequencies, prob = self.psychoacoustic(tag=tag, plot=False, last=last, threshold=threshold)
 
         fig = plt.figure(constrained_layout=True, figsize=(12, 9))
         gs = fig.add_gridspec(4, 4)
@@ -290,9 +301,10 @@ class Mouse(object):
         ax3.xaxis.set_major_formatter(formatter)
 
         plt.suptitle('{}'.format(self.ID), fontsize=18)
-        plt.show()
 
-
+        plt.savefig(os.path.join(self.output, '{}_{}.svg'.format(self.ID, name)))
+        if show:
+            plt.show()
 
     class File(object):
         """DAT file as an object for better further use"""
@@ -311,7 +323,3 @@ class Mouse(object):
         def __filename_parser(self, filename):
             parsed_filename = filename.split('_')
             self.tag, self.date, self.ID, self.nfile = parsed_filename
-
-
-mouse = Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660461')
-mouse.summary(tag=['DIS', 'PC'], stim_freqs=np.geomspace(6e3, 16e3, 16))
