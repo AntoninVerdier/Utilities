@@ -11,7 +11,6 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow,Flow
 from google.auth.transport.requests import Request
 
-from Hearis import get_P_lick
 from collections import Counter
 
 #from auth import spid
@@ -181,7 +180,7 @@ class Mouse(object):
         ax.set_yticks(np.linspace(0, 100, 11))
         plt.show()
     
-    def perf(self, tag=['DIS', 'PC'], plot=True):
+    def perf(self, tag=['DIS', 'PC'], plot=False):
         """ Compute evolution of mouse's performance following the task's type"""
         if tag:
             files = [file for file in self.elphy if file.tag in tag]
@@ -198,6 +197,7 @@ class Mouse(object):
         dates = np.sort(dates)
 
         if len(files) > 1 and plot:
+            print(plot)
             self.__perf_fig(dates, correct_tr)
 
         return correct_tr, dates
@@ -225,9 +225,15 @@ class Mouse(object):
         if last:
             files = [files[-1]]
 
+        print(threshold)
+
         if threshold:
+            print('ok')
             ps, _ = self.perf(tag=tag)
+            print(ps)
             files = [f for f, p in zip(files, ps) if p > threshold]
+
+        print('Days selected : ', [f.date for f in files])
 
         licks = np.array([item for f in files for item in f.tr_licks])
         tasks = np.array([item for f in files for item in f.tr_type])
