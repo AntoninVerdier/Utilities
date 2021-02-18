@@ -118,13 +118,12 @@ class Mouse(object):
         files = []
         for file in os.listdir(folder):
             files.append(self.File(os.path.join(folder, file)))
-       
+
         sorted_dates = np.argsort([datetime.datetime.strptime(f.date, '%d%m%Y') for f in files])
 
         files = [files[i] for i in sorted_dates]
-        
-        return files
 
+        return files
 
     def save(self):
         pass
@@ -179,7 +178,7 @@ class Mouse(object):
         ax.set_ylim(0, 100)
         ax.set_yticks(np.linspace(0, 100, 11))
         plt.show()
-    
+
     def perf(self, tag=['DIS', 'PC'], plot=False):
         """ Compute evolution of mouse's performance following the task's type"""
         if tag:
@@ -208,7 +207,7 @@ class Mouse(object):
         ax = plt.subplot(111)
         ax.set_xscale('log')
 
-        if stim_freqs is not None: 
+        if stim_freqs is not None:
             ax.plot(stim_freqs, prob)
             ax.axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
         else:
@@ -219,7 +218,7 @@ class Mouse(object):
     def psychoacoustic(self, tag='PC', lick_treshold=5, last=True, stim_freqs=None, plot=True, date=None, threshold=None):
         if date:
             files = [file for file in self.elphy if file.date == date]
-        else:   
+        else:
             files = [file for file in self.elphy if file.tag in tag]
 
         if last:
@@ -265,7 +264,7 @@ class Mouse(object):
         ax2 = fig.add_subplot(gs[0:2, 2:4])
         ax3 = fig.add_subplot(gs[2:4, :])
 
-   
+
         ax1.grid(c='gainsboro')
         ax1.plot(dates_w, weights, 'ro-')
         ax1.set_ylim([weights[0]-5, weights[0]+5])
@@ -280,7 +279,7 @@ class Mouse(object):
             ax1.axhline(y=weights[0]+weights[0]*mult, c=c, ls='--', linewidth=1)
 
         ax2.set_xscale('log')
-        if stim_freqs is not None: 
+        if stim_freqs is not None:
             ax2.plot(stim_freqs, prob)
             ax2.axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
         else:
@@ -298,7 +297,7 @@ class Mouse(object):
         ax3.set_title(label='Psychophysic',
                       fontsize=13,
                       fontstyle='italic')
-       
+
         locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
         formatter = mdates.ConciseDateFormatter(locator)
         ax1.xaxis.set_major_locator(locator)
@@ -311,6 +310,15 @@ class Mouse(object):
         plt.savefig(os.path.join(self.output, '{}_{}.svg'.format(self.ID, name)))
         if show:
             plt.show()
+
+    def correct_graph(self, date):
+        file = [file for file in self.elphy if file.date == date][0]
+
+        fig = plt.figure(figsize=(30, 2)) # Maybe best if it is a heatmap ?
+
+        plt.plot(file.tr_corr)
+        plt.show()
+
 
     class File(object):
         """DAT file as an object for better further use"""
@@ -329,3 +337,7 @@ class Mouse(object):
         def __filename_parser(self, filename):
             parsed_filename = filename.split('_')
             self.tag, self.date, self.ID, self.nfile = parsed_filename
+
+mouse = Mouse('/home/pouple/PhD/Data/660269')
+mouse.correct_graph('17022021')
+#mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
