@@ -315,9 +315,23 @@ class Mouse(object):
         file = [file for file in self.elphy if file.date == date][0]
 
         fig = plt.figure(figsize=(30, 2)) # Maybe best if it is a heatmap ?
+        ax = plt.subplot(111)
+
+
 
         plt.plot(file.tr_corr)
+        ax.imshow(y[np.newaxis,:], cmap="plasma", aspect="auto", extent=extent)
         plt.show()
+
+    def removeGaps(self, date='18022021'):
+        """ Remove gaps when the mouse is not licking at all so the data is not corrupted by a bored mouse
+        """
+        data = [file for file in self.elphy if file.date == date][0]
+
+        print(data.tr_licks, data.date)
+        
+
+        
 
 
     class File(object):
@@ -338,6 +352,6 @@ class Mouse(object):
             parsed_filename = filename.split('_')
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
-mouse = Mouse('/home/pouple/PhD/Data/660269')
-mouse.correct_graph('17022021')
+mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660268')
+mouse.removeGaps()
 #mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
