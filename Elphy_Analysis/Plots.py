@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 from Custom import Mouse
 
-mice = ['459', '461', '462', '463', '267', '268', '269']
-
+mice_id = ['459', '461', '462', '463', '267', '268', '269']
+mice = [Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660{}'.format(i) for i in mice_id)]
 
 
 for m in mice:

@@ -201,7 +201,7 @@ class Mouse(object):
 
         return correct_tr, dates
 
-    def __psychoacoustic_fig(self, frequencies, prob, stim_freqs):
+    def psychoacoustic_fig(self, frequencies, prob, stim_freqs):
 
         plt.figure(figsize=(12, 9))
         ax = plt.subplot(111)
@@ -215,7 +215,7 @@ class Mouse(object):
 
         plt.show()
 
-    def psychoacoustic(self, tag='PC', lick_treshold=5, last=True, stim_freqs=None, plot=True, date=None, threshold=None):
+    def psychoacoustic(self, tag='PC', last=False, stim_freqs=None, plot=True, date=None, threshold=None):
         if date:
             files = [file for file in self.elphy if file.date == date]
         else:
@@ -224,29 +224,25 @@ class Mouse(object):
         if last:
             files = [files[-1]]
 
-        print(threshold)
-
         if threshold:
-            print('ok')
             ps, _ = self.perf(tag=tag)
-            print(ps)
             files = [f for f, p in zip(files, ps) if p > threshold]
 
-        print('Days selected : ', [f.date for f in files])
 
         licks = np.array([item for f in files for item in f.tr_licks])
         tasks = np.array([item for f in files for item in f.tr_type])
 
 
         ######### Careful !!! Must have the same lick threshold than during the task, retrieve from elphy
-        licks = (licks >= lick_treshold)
+        licks = (licks >= 5)
+
 
         P_lick = {key:sum(tasks*licks == key)/sum(tasks == key) for key in list(set(tasks))}
 
         sorted_P_licks = sorted(P_lick.items())
         frequencies, prob = zip(*sorted_P_licks)
 
-        if plot: self.__psychoacoustic_fig(frequencies, prob, stim_freqs)
+        if plot: self.psychoacoustic_fig(frequencies, prob, stim_freqs)
 
         return frequencies, prob
 
@@ -335,11 +331,6 @@ class Mouse(object):
         """
         data = [file for file in self.elphy if file.date == date][0]
 
-        
-        
-
-        
-
 
     class File(object):
         """DAT file as an object for better further use"""
@@ -361,9 +352,11 @@ class Mouse(object):
             parsed_filename = filename.split('_')
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
-mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660463')
-mouse.get_session_info('18022021')
+# mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660463')
+# mouse.get_session_info('18022021')
 #mouse.removeGaps()
 #mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
 #mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=80)
+
+# make a function to find specific files for one mouse and be able to call it
 
