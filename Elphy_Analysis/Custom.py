@@ -315,20 +315,27 @@ class Mouse(object):
         file = [file for file in self.elphy if file.date == date][0]
 
         fig = plt.figure(figsize=(30, 2)) # Maybe best if it is a heatmap ?
-        ax = plt.subplot(111)
-
-
-
+        plt.subplot(211)
+        plt.plot(file.tr_licks)
+        for i in range(0, 17):
+            print('{}: '.format(i), np.sum((file.tr_licks == i))*100/len(file.tr_licks))
+        plt.subplot(212)
         plt.plot(file.tr_corr)
-        ax.imshow(y[np.newaxis,:], cmap="plasma", aspect="auto", extent=extent)
         plt.show()
+
+    def get_session_info(self, date):
+        file = [file for file in self.elphy if file.date == date][0]
+        print('Lick Number : ', file.xpar['fix']['LickNumber'])
+        print('Refractory Time :', file.xpar['fix']['RefractoryTime'])
+        print('Random Refractory Time :', file.xpar['fix']['RandomRefractoryTime'])
+
 
     def removeGaps(self, date='18022021'):
         """ Remove gaps when the mouse is not licking at all so the data is not corrupted by a bored mouse
         """
         data = [file for file in self.elphy if file.date == date][0]
 
-        print(data.tr_licks, data.date)
+        
         
 
         
@@ -344,6 +351,8 @@ class Mouse(object):
         def __extract_data(self, path):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
 
+            self.xpar = xpar
+
             self.tr_type = vectors['TRECORD']
             self.tr_licks = vectors['LICKRECORD']
             self.tr_corr = vectors['correct']
@@ -352,6 +361,9 @@ class Mouse(object):
             parsed_filename = filename.split('_')
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
-mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660268')
-mouse.removeGaps()
+mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660463')
+mouse.get_session_info('18022021')
+#mouse.removeGaps()
 #mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
+#mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=80)
+
