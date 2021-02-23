@@ -1,4 +1,5 @@
 import os
+import re
 import pickle
 import datetime
 import numpy as np
@@ -17,7 +18,7 @@ from collections import Counter
 
 class Mouse(object):
     """docstring for Mouse"""
-    def __init__(self, path=None, ID=None, output='../Output'):
+    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False):
         self.ID = ID
         self.output = output
 
@@ -325,37 +326,57 @@ class Mouse(object):
         print('Refractory Time :', file.xpar['fix']['RefractoryTime'])
         print('Random Refractory Time :', file.xpar['fix']['RandomRefractoryTime'])
 
-
-    def removeGaps(self, date='18022021'):
-        """ Remove gaps when the mouse is not licking at all so the data is not corrupted by a bored mouse
-        """
-        data = [file for file in self.elphy if file.date == date][0]
-
-
     class File(object):
         """DAT file as an object for better further use"""
-        def __init__(self, path):
+        def __init__(self, path, rmgaps=True):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
-            self.__extract_data(self.path)
+            self.__extract_data(self.path, rmgaps)
 
-        def __extract_data(self, path):
+        def __extract_data(self, path, rmgaps):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
 
             self.xpar = xpar
 
-            self.tr_type = vectors['TRECORD']
-            self.tr_licks = vectors['LICKRECORD']
-            self.tr_corr = vectors['correct']
+            if rmgaps:
+                self.tr_type, self.tr_licks, self.tr_corr = self.__removeGaps(vectors['TRECORD'], vectors['LICKRECORD'], vectors['correct'])
+            else:
+                self.tr_type = vectors['TRECORD']
+                self.tr_licks = vectors['LICKRECORD']
+                self.tr_corr = vectors['correct']
 
         def __filename_parser(self, filename):
             parsed_filename = filename.split('_')
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
-# mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660463')
-# mouse.get_session_info('18022021')
-#mouse.removeGaps()
-#mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
+        def __removeGaps(self, ttype, licks, corr):
+            """ Remove gaps when the mouse is not licking at all so the data is not corrupted by a bored mouse
+            """
+            licks = list(licks)
+            ttype = list(ttype)
+            corr = list(corr)
+
+            str_licks = [str(i) for i in licks]
+
+            str_licks = ''.join(str_licks)
+            
+            no_licks = [[m.start(), m.end()] for m in re.finditer('[^1-9]+', str_licks) if m.end() - m.start() > 10]
+            
+            for gap in reversed(no_licks):
+                del licks[gap[0]:gap[1]]
+                del ttype[gap[0]:gap[1]]
+                del corr[gap[0]:gap[1]]
+
+            print('Gaps removed - {} : '.format(self.date))
+            for gap in no_licks:
+                print(gap)
+
+            return ttype, licks, corr
+
+mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660463', rmgaps=True)
+#mouse.get_session_info('22022021')
+mouse.correct_graph('22022021')
+mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
 #mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=80)
 
 # make a function to find specific files for one mouse and be able to call it
