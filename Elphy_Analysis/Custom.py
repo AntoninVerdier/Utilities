@@ -328,7 +328,7 @@ class Mouse(object):
 
     class File(object):
         """DAT file as an object for better further use"""
-        def __init__(self, path, rmgaps=True):
+        def __init__(self, path, rmgaps=False):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
@@ -339,7 +339,7 @@ class Mouse(object):
             self.xpar = xpar
 
             if rmgaps:
-                self.tr_type, self.tr_licks, self.tr_corr = self.__removeGaps(vectors['TRECORD'], vectors['LICKRECORD'], vectors['correct'])
+                self.tr_type, self.tr_licks, self.tr_corr = self.__removeGaps(vectors['TRECORD'], vectors['LICKRECORD'], vectors['correct'], xpar)
             else:
                 self.tr_type = vectors['TRECORD']
                 self.tr_licks = vectors['LICKRECORD']
@@ -349,7 +349,7 @@ class Mouse(object):
             parsed_filename = filename.split('_')
             self.tag, self.date, self.ID, self.nfile = parsed_filename
 
-        def __removeGaps(self, ttype, licks, corr):
+        def __removeGaps(self, ttype, licks, corr, xpar):
             """ Remove gaps when the mouse is not licking at all so the data is not corrupted by a bored mouse
             """
             licks = list(licks)
@@ -360,7 +360,7 @@ class Mouse(object):
 
             str_licks = ''.join(str_licks)
             
-            no_licks = [[m.start(), m.end()] for m in re.finditer('[^1-9]+', str_licks) if m.end() - m.start() > 10]
+            no_licks = [[m.start(), m.end()] for m in re.finditer('[^1-9]+', str_licks) if m.end() - m.start() > 15]
             
             for gap in reversed(no_licks):
                 del licks[gap[0]:gap[1]]
@@ -373,10 +373,10 @@ class Mouse(object):
 
             return ttype, licks, corr
 
-mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660463', rmgaps=True)
+mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660269', rmgaps=True)
 #mouse.get_session_info('22022021')
-mouse.correct_graph('22022021')
-mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
+#mouse.correct_graph('22022021')
+mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=85)
 #mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=80)
 
 # make a function to find specific files for one mouse and be able to call it
