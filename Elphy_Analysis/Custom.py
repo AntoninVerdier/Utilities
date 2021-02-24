@@ -2,6 +2,7 @@ import os
 import re
 import pickle
 import datetime
+import itertools
 import numpy as np
 import pandas as pd
 import elphy_reader as ertd
@@ -69,11 +70,12 @@ class Mouse(object):
         self.hour_waterd = all_data[mouse_idx + 1][8]
         self.weight_befored = all_data[mouse_idx][9]
         self.health_atd = all_data[mouse_idx][10]
+        self.reversed = int(all_data[mouse_idx][11])
 
         # Extract behavioural data on a daily basis and return a pd dataframe
         dates, weights, water_profile, health, protocol, estimated_perf = [], [], [], [], [], []
 
-        for row in range(11, len(all_data[mouse_idx]), 6):
+        for row in range(12, len(all_data[mouse_idx]), 6):
             dates.append(all_data[mouse_idx][row])
             weights.append(np.float(all_data[mouse_idx][row + 1]))
             water_profile.append(all_data[mouse_idx][row + 2])
@@ -151,11 +153,9 @@ class Mouse(object):
                   fontstyle='italic')
 
         # For further improvment, add a legend for dashed lines
-
-
         plt.show()
 
-    def weight(self, plot=True):
+    def weight(self, plot=False):
         weights = self.df_beh['weight']
         dates = self.df_beh['date']
 
@@ -229,14 +229,14 @@ class Mouse(object):
             ps, _ = self.perf(tag=tag)
             files = [f for f, p in zip(files, ps) if p > threshold]
 
-
-        licks = np.array([item for f in files for item in f.tr_licks])
         tasks = np.array([item for f in files for item in f.tr_type])
 
+        corr = np.array([item for f in files for item in f.tr_corr])
 
-        ######### Careful !!! Must have the same lick threshold than during the task, retrieve from elphy
-        licks = (licks >= 5)
-
+        if self.reversed:
+            licks = [not c if tasks[i] < 9 else c for i, c in enumerate(corr)]
+        else:
+            licks = [not c if tasks[i] > 8 else c for i, c in enumerate(corr)]
 
         P_lick = {key:sum(tasks*licks == key)/sum(tasks == key) for key in list(set(tasks))}
 
@@ -282,7 +282,7 @@ class Mouse(object):
         else:
             ax2.plot(frequencies, prob)
 
-        ax2.set_title(label='Psychoacoustic',
+        ax2.set_title(label='Psychoacoustic, above {}%'.format(threshold),
                       fontsize=13,
                       fontstyle='italic')
 
@@ -328,7 +328,7 @@ class Mouse(object):
 
     class File(object):
         """DAT file as an object for better further use"""
-        def __init__(self, path, rmgaps=False):
+        def __init__(self, path, rmgaps=True):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
@@ -356,12 +356,11 @@ class Mouse(object):
             ttype = list(ttype)
             corr = list(corr)
 
-            str_licks = [str(i) for i in licks]
-
+            str_licks = [1 if l > 9 else l for l in licks]
+            str_licks = [str(i) for i in str_licks]
             str_licks = ''.join(str_licks)
-            
             no_licks = [[m.start(), m.end()] for m in re.finditer('[^1-9]+', str_licks) if m.end() - m.start() > 15]
-            
+
             for gap in reversed(no_licks):
                 del licks[gap[0]:gap[1]]
                 del ttype[gap[0]:gap[1]]
@@ -370,13 +369,15 @@ class Mouse(object):
             print('Gaps removed - {} : '.format(self.date))
             for gap in no_licks:
                 print(gap)
+            print(len(licks))
 
             return ttype, licks, corr
 
-mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660269', rmgaps=True)
+#mouse = Mouse('/home/pouple/PhD/Data/660459', rmgaps=True)
+#mouse.psychoacoustic(tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), plot=True, threshold=80)
 #mouse.get_session_info('22022021')
 #mouse.correct_graph('22022021')
-mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=85)
+#mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=85)
 #mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=80)
 
 # make a function to find specific files for one mouse and be able to call it
