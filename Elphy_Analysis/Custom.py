@@ -185,6 +185,10 @@ class Mouse(object):
         if tag:
             files = [file for file in self.elphy if file.tag in tag]
 
+        for f in files:
+            print(f.date)
+            print(f.tr_licks)
+
         correct_tr = [100*sum(f.tr_corr)/len(f.tr_corr) for f in files]
         dates = [f.date for f in files]
         tags = [f.tag for f in files]
@@ -328,10 +332,11 @@ class Mouse(object):
 
     class File(object):
         """DAT file as an object for better further use"""
-        def __init__(self, path, rmgaps=True):
+        def __init__(self, path, rmgaps=False):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
+            self.__removeBadBlocks(0.8)
 
         def __extract_data(self, path, rmgaps):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
@@ -348,6 +353,20 @@ class Mouse(object):
         def __filename_parser(self, filename):
             parsed_filename = filename.split('_')
             self.tag, self.date, self.ID, self.nfile = parsed_filename
+
+        def __removeBadBlocks(self, threshold):
+            if len(self.tr_corr)%64 == 0:
+                div = len(self.tr_corr)//64
+                blocks_to_keep = [i for i, bloc in enumerate(np.split(self.tr_corr, div)) if sum(bloc)/len(bloc) > threshold]
+                if blocks_to_keep:
+                    self.tr_type = np.concatenate([bloc for i, bloc in enumerate(np.split(self.tr_type, div)) if i in blocks_to_keep])
+                    self.tr_licks = np.concatenate([bloc for i, bloc in enumerate(np.split(self.tr_licks, div)) if i in blocks_to_keep])
+                    self.tr_corr = np.concatenate([bloc for i, bloc in enumerate(np.split(self.tr_corr, div)) if i in blocks_to_keep])
+                else:
+                    self.tr_type = []
+                    self.tr_licks = []
+                    self.tr_corr = []
+                    
 
         def __removeGaps(self, ttype, licks, corr, xpar):
             """ Remove gaps when the mouse is not licking at all so the data is not corrupted by a bored mouse
@@ -369,16 +388,15 @@ class Mouse(object):
             print('Gaps removed - {} : '.format(self.date))
             for gap in no_licks:
                 print(gap)
-            print(len(licks))
 
             return ttype, licks, corr
 
-#mouse = Mouse('/home/pouple/PhD/Data/660459', rmgaps=True)
+mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660463')
 #mouse.psychoacoustic(tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), plot=True, threshold=80)
-#mouse.get_session_info('22022021')
-#mouse.correct_graph('22022021')
-#mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=85)
-#mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=80)
+#mouse.get_session_info('04032021')
+#mouse.correct_graph('02022021')
+mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
+#mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=0)
 
 # make a function to find specific files for one mouse and be able to call it
 
