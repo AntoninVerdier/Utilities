@@ -120,7 +120,10 @@ class Mouse(object):
         """
         files = []
         for file in os.listdir(folder):
-            files.append(self.File(os.path.join(folder, file)))
+            current_file = self.File(os.path.join(folder, file))
+            if len(current_file.tr_corr) != 0:
+                files.append(current_file)
+
 
         sorted_dates = np.argsort([datetime.datetime.strptime(f.date, '%d%m%Y') for f in files])
 
@@ -366,7 +369,6 @@ class Mouse(object):
                     self.tr_type = []
                     self.tr_licks = []
                     self.tr_corr = []
-                    
 
         def __removeGaps(self, ttype, licks, corr, xpar):
             """ Remove gaps when the mouse is not licking at all so the data is not corrupted by a bored mouse
@@ -391,7 +393,7 @@ class Mouse(object):
 
             return ttype, licks, corr
 
-mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660463')
+mouse = Mouse('/home/pouple/PhD/Data/660267')
 #mouse.psychoacoustic(tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), plot=True, threshold=80)
 #mouse.get_session_info('04032021')
 #mouse.correct_graph('02022021')
