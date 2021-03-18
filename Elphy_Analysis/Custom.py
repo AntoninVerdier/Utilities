@@ -339,7 +339,7 @@ class Mouse(object):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
-            self.__removeBadBlocks(0.8)
+            #self.__removeBadBlocks(0.6)
 
         def __extract_data(self, path, rmgaps):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
@@ -393,11 +393,11 @@ class Mouse(object):
 
             return ttype, licks, corr
 
-mouse = Mouse('/home/pouple/PhD/Data/660267')
+#mouse = Mouse('/home/pouple/PhD/Data/660267')
 #mouse.psychoacoustic(tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), plot=True, threshold=80)
 #mouse.get_session_info('04032021')
 #mouse.correct_graph('02022021')
-mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
+#mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
 #mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=0)
 
 # make a function to find specific files for one mouse and be able to call it

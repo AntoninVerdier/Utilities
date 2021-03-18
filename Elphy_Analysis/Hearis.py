@@ -7,9 +7,11 @@ import matplotlib.pyplot as plt
 
 from Custom import Mouse
 
-mice_id = ['459', '461', '462', '463', '267', '268', '269']
-#mice_id = ['459', '462']
-mice = [Mouse('/home/pouple/PhD/Data/660{}'.format(i)) for i in mice_id]
+#mice_id = ['268', '269']
+#mice_id = ['459','462', '269']
+#mice_id = ['463', '268']
+mice_id = ['459', '461', '462', '267', '269']
+mice = [Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660{}'.format(i)) for i in mice_id]
 
 def psycho_week():
 	pass
@@ -69,7 +71,7 @@ def all_perfs(mice, tag=['PC'], plot=False):
 	plt.savefig(os.path.join(mouse.output, 'perf_followup_PC_gaps.svg'))
 	plt.show()
 
-def all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80):
+def all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=85):
 	fig, axs = plt.subplots(4, 2, figsize=(10, 20))
 	fig.suptitle('Psycho curves - AVEC GAP REMOVAL - {} %'.format(threshold))
 
@@ -77,15 +79,23 @@ def all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), thresho
 		f, p = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, threshold=threshold, plot=False)
 
 		axs[i%4, i//4].set_xscale('log')
-		axs[i%4, i//4].plot(stim_freqs, p, 'o-', markersize=2)
+		axs[i%4, i//4].plot(stim_freqs, p[:16], 'o-', markersize=2)
 		axs[i%4, i//4].axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
 		axs[i%4, i//4].set_title(label='Psycho curve of {}'.format(mouse.ID),
 								fontsize=10,
 								fontstyle='italic')
 
-	plt.savefig(os.path.join(mouse.output, 'psycho_curves_gaps.svg'))
+		axs[i%4, i//4].plot(stim_freqs, p[16:], 'o-', markersize=2 ,c='blue')
+
+	plt.savefig(os.path.join(mouse.output, 'psycho_curves_85.svg'))
 	plt.show()
-all_perfs(mice)
-all_psycho(mice)
+
+
+#all_weights(mice)
+double = list(np.geomspace(6e3, 16e3, 16))
+
+#all_perfs(mice, tag=['PCAM'])
+all_psycho(mice, tag=['PCAMN'], threshold=50)
+#mean_psycoacoustic(mice)
 
 
