@@ -188,10 +188,6 @@ class Mouse(object):
         if tag:
             files = [file for file in self.elphy if file.tag in tag]
 
-        for f in files:
-            print(f.date)
-            print(f.tr_licks)
-
         correct_tr = [100*sum(f.tr_corr)/len(f.tr_corr) for f in files]
         dates = [f.date for f in files]
         tags = [f.tag for f in files]
@@ -239,6 +235,9 @@ class Mouse(object):
         tasks = np.array([item for f in files for item in f.tr_type])
 
         corr = np.array([item for f in files for item in f.tr_corr])
+
+        print(Counter(tasks))
+        print(corr)
 
         if self.reversed:
             licks = [not c if tasks[i] < 9 else c for i, c in enumerate(corr)]
