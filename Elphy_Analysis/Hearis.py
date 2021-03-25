@@ -10,7 +10,7 @@ from Custom import Mouse
 #mice_id = ['268', '269']
 #mice_id = ['459','462', '269']
 #mice_id = ['463', '268']
-mice_id = ['459', '461', '462', '267', '269']
+mice_id = ['459', '461', '462', '267', '269', '268', '463']
 mice = [Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660{}'.format(i)) for i in mice_id]
 
 def psycho_week():
@@ -76,26 +76,53 @@ def all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), thresho
 
 	for i, mouse in enumerate(mice):
 		f, p = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, threshold=threshold, plot=False)
+		print(f)
+		print(p)
 
 		axs[i%4, i//4].set_xscale('log')
-		axs[i%4, i//4].plot(stim_freqs, p[:16], 'o-', markersize=2, c='royalblue', label='No Noise')
+		axs[i%4, i//4].plot(stim_freqs, p[:6], 'o-', markersize=2, c='royalblue', label='No Noise')
 		axs[i%4, i//4].axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
 		axs[i%4, i//4].set_title(label='Psycho curve of {}'.format(mouse.ID),
 								fontsize=10,
 								fontstyle='italic')
 
-		axs[i%4, i//4].plot(stim_freqs, p[16:], 'o-', markersize=2, c='firebrick', label='Noise 55dB')
+		axs[i%4, i//4].plot(stim_freqs, p[6:], 'o-', markersize=2, c='firebrick', label='Noise 55dB')
 
 		plt.legend()
 	plt.tight_layout()
 	plt.savefig(os.path.join(mouse.output, 'psycho_curves_85.svg'))
 	plt.show()
 
+def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), threshold=85):
+	fig, axs = plt.subplots(4, 2, figsize=(10, 20))
+
+	for i, mouse in enumerate(mice):
+		f, p = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, threshold=threshold, plot=False)
+		axs[i%4, i//4].set_xscale('log')
+		axs[i%4, i//4].plot(stim_freqs, p[:6], 'o-', markersize=2, label='No Noise')
+		axs[i%4, i//4].axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
+		axs[i%4, i//4].set_title(label='Psycho curve of {}'.format(mouse.ID),
+								fontsize=10,
+								fontstyle='italic')
+		for j, noise in enumerate(tag):
+			f, p = mouse.psychoacoustic(tag=[noise], stim_freqs=stim_freqs, threshold=threshold, plot=False)
+
+			axs[i%4, i//4].plot(stim_freqs, p[6:], 'o-', markersize=2, label='WN_{}dB'.format(noise[-2:]))
+
+			axs[i%4, i//4].legend()
+
+	plt.tight_layout()
+	plt.savefig(os.path.join(mouse.output, 'psycho_curves_85.svg'))
+	plt.show()
+
+
 
 #all_weights(mice)
+# all_psycho(mice, tag=['PCAMN45'], threshold=40, stim_freqs=np.geomspace(20, 200, 6))
+# all_psycho(mice, tag=['PCAMN50'], threshold=40, stim_freqs=np.geomspace(20, 200, 6))
+# all_psycho(mice, tag=['PCAMN60'], threshold=40, stim_freqs=np.geomspace(20, 200, 6))
 
-#all_perfs(mice, tag=['PCAM'])
-all_psycho(mice, tag=['PCAMN'], threshold=0)
+noise_psycho(mice, tag=['PCAMN45', 'PCAMN50', 'PCAMN60'], threshold=65)
 #mean_psycoacoustic(mice)
 
 
