@@ -19,7 +19,7 @@ from collections import Counter
 
 class Mouse(object):
     """docstring for Mouse"""
-    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False):
+    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False):
         self.ID = ID
         self.output = output
 
@@ -27,7 +27,9 @@ class Mouse(object):
             self.df_beh = self.__get_data_from_gsheet()
         # else:
         #     print('Please provide an ID to retrieve data from Google Sheets')
-        if path:
+        if elphy_only:
+            self.elphy = self.__process_elphy_at_file(path)
+        elif path and not elphy_only:
             self.ID = os.path.basename(os.path.normpath(path))
             self.elphy = self.__process_elphy_at_file(path)
             self.df_beh = self.__get_data_from_gsheet()
@@ -115,14 +117,21 @@ class Mouse(object):
 
         return creds
 
-    def __process_elphy_at_file(self, folder):
+    def __process_elphy_at_file(self, folder, tag=False):
         """ Order rax elphy data into an usable dictionary
         """
         files = []
         for file in os.listdir(folder):
-            current_file = self.File(os.path.join(folder, file))
-            if len(current_file.tr_corr) != 0:
-                files.append(current_file)
+            if tag:
+                print('ok')
+                if file.split('_')[0] in tag:
+                    current_file = self.File(os.path.join(folder, file))
+                    if len(current_file.tr_corr) != 0:
+                        files.append(current_file)
+            else:
+                current_file = self.File(os.path.join(folder, file))
+                if len(current_file.tr_corr) != 0:
+                    files.append(current_file)
 
 
         sorted_dates = np.argsort([datetime.datetime.strptime(f.date, '%d%m%Y') for f in files])
@@ -183,7 +192,7 @@ class Mouse(object):
         ax.set_yticks(np.linspace(0, 100, 11))
         plt.show()
 
-    def perf(self, tag=['DIS', 'PC'], plot=False):
+    def perf(self, tag=['DIS', 'PC'], plot=False, dateformat='%d%m%Y'):
         """ Compute evolution of mouse's performance following the task's type"""
         if tag:
             files = [file for file in self.elphy if file.tag in tag]
@@ -192,7 +201,7 @@ class Mouse(object):
         dates = [f.date for f in files]
         tags = [f.tag for f in files]
 
-        dates = pd.to_datetime(dates, format='%d%m%Y')
+        dates = pd.to_datetime(dates, format=dateformat)
 
 
         correct_tr = [correct_tr[i] for i in np.argsort(dates)]
@@ -246,13 +255,14 @@ class Mouse(object):
         #         licks = [not c if (9 <= tasks[i] <= 16) or (25 <= tasks[i] <= 32) else c for i, c in enumerate(corr)]
 
         if self.reversed:
-            if np.max(tasks) > 6:
+            if np.max(tasks) == 12:
                 licks = [not c if (1 <= tasks[i] <= 3) or (7 <= tasks[i] <= 9) else c for i, c in enumerate(corr)]
             else:
                 licks = [not c if 1 <= tasks[i] <= 3 else c for i, c in enumerate(corr)]
         else:
-            licks = [not c if 4 <= tasks[i] <= 6 else c for i, c in enumerate(corr)]
-            if np.max(tasks) > 16:
+            if np.max(tasks) == 12:
+                licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
+            if np.max(tasks) == 16:
                 licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
 
 
@@ -347,7 +357,7 @@ class Mouse(object):
 
     class File(object):
         """DAT file as an object for better further use"""
-        def __init__(self, path, rmgaps=True):
+        def __init__(self, path, rmgaps=False):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)

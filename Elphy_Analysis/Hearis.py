@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from Custom import Mouse
 
+
 #mice_id = ['268', '269']
 #mice_id = ['459','462', '269']
 #mice_id = ['463', '268']
@@ -104,14 +105,18 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
 		axs[i%4, i//4].set_title(label='Psycho curve of {}'.format(mouse.ID),
 								fontsize=10,
 								fontstyle='italic')
+		axs[i%4, i//4].set_xlabel('Hz')
+		axs[i%4, i//4].set_ylabel('Lick Prob.')
+		plt.tight_layout()
+
 		for j, noise in enumerate(tag):
 			f, p = mouse.psychoacoustic(tag=[noise], stim_freqs=stim_freqs, threshold=threshold, plot=False)
 
 			axs[i%4, i//4].plot(stim_freqs, p[6:], 'o-', markersize=2, label='WN_{}dB'.format(noise[-2:]))
 
 			axs[i%4, i//4].legend()
+			plt.tight_layout()
 
-	plt.tight_layout()
 	plt.savefig(os.path.join(mouse.output, 'psycho_curves_85.svg'))
 	plt.show()
 
