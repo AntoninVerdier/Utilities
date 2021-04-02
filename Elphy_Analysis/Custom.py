@@ -133,7 +133,6 @@ class Mouse(object):
                 if len(current_file.tr_corr) != 0:
                     files.append(current_file)
 
-
         sorted_dates = np.argsort([datetime.datetime.strptime(f.date, '%d%m%Y') for f in files])
 
         files = [files[i] for i in sorted_dates]
@@ -228,9 +227,9 @@ class Mouse(object):
 
         plt.show()
 
-    def psychoacoustic(self, tag='PC', last=False, stim_freqs=None, plot=True, date=None, threshold=None):
+    def psychoacoustic(self, tag=['PC'], last=False, stim_freqs=None, plot=True, date=None, threshold=None):
         if date:
-            files = [file for file in self.elphy if file.date == date]
+            files = [file for file in self.elphy if file.date in date]
         else:
             files = [file for file in self.elphy if file.tag in tag]
 
@@ -243,7 +242,6 @@ class Mouse(object):
 
         tasks = np.array([item for f in files for item in f.tr_type])
         corr = np.array([item for f in files for item in f.tr_corr])
-
         # if self.reversed:
         #     if np.max(tasks) > 16:
         #         licks = [not c if (1 <= tasks[i] <= 8) or (17 <= tasks[i] <= 24) else c for i, c in enumerate(corr)]
@@ -253,7 +251,6 @@ class Mouse(object):
         #     licks = [not c if 9 <= tasks[i] <= 16 else c for i, c in enumerate(corr)]
         #     if np.max(tasks) > 16:
         #         licks = [not c if (9 <= tasks[i] <= 16) or (25 <= tasks[i] <= 32) else c for i, c in enumerate(corr)]
-
         if self.reversed:
             if np.max(tasks) == 12:
                 licks = [not c if (1 <= tasks[i] <= 3) or (7 <= tasks[i] <= 9) else c for i, c in enumerate(corr)]
@@ -378,6 +375,7 @@ class Mouse(object):
         def __filename_parser(self, filename):
             parsed_filename = filename.split('_')
             self.tag, self.date, self.ID, self.nfile = parsed_filename
+            self.tag += '_'
 
         def __removeBadBlocks(self, threshold, bloc_size):
             if len(self.tr_corr)%bloc_size == 0:
