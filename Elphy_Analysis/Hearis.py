@@ -14,10 +14,21 @@ from Custom import Mouse
 #mice_id = ['459','462', '269']
 #mice_id = ['463', '268']
 mice_id = ['459', '461', '462', '267', '269', '268', '463']
-mice = [Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660{}'.format(i)) for i in mice_id]
+mice = [Mouse('/home/pouple/PhD/Data/660{}'.format(i)) for i in mice_id]
 
 def psycho_week():
 	pass
+
+def sigmoid(x, L ,x0, k, b):
+	y = L / (1 + np.exp(-k*(x-x0)))+b
+	return (y)
+
+def fit_sigmoid(f, p):
+	p0 = [1, 10e3, 1, 0] # this is an mandatory initial guess
+	popt, pcov = curve_fit(sigmoid, f, p, method='dogbox')
+	y = sigmoid(f, *popt)
+
+	return y
 
 def mean_psycoacoustic(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), date=None, threshold=None, plot=True):
 	"""
@@ -79,6 +90,11 @@ def all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), thresho
 
 	for i, mouse in enumerate(mice):
 		f, p = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, threshold=threshold, plot=False)
+
+		y = fit_sigmoid(stim_freqs, p)
+		axs[i%4, i//4].plot(stim_freqs, y, label='fit')
+
+
 		axs[i%4, i//4].set_xscale('log')
 		axs[i%4, i//4].plot(stim_freqs, p, 'o-', markersize=2, c='royalblue', label='No Noise')
 		axs[i%4, i//4].axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
@@ -98,25 +114,28 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
 	for i, mouse in enumerate(mice):
 		slopes[mouse.ID] = []
 		f, p = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, threshold=threshold, plot=False)
+
 		slopes[mouse.ID].append(np.abs((p[-1]-p[0])/(16e3 - 6e3)))
 		axs[i%4, i//4].set_xscale('log')
-		axs[i%4, i//4].plot(stim_freqs, p[:6], 'o-', markersize=2, label='No Noise')
+		axs[i%4, i//4].plot(stim_freqs, p[:6], 'o-', markersize=2, label='10kHz')
 		axs[i%4, i//4].axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
-		axs[i%4, i//4].set_title(label='Psycho curve of {}'.format(mouse.ID),
-								fontsize=10,
-								fontstyle='italic')
+		# axs[i%4, i//4].set_title(label='Psycho curve of {}'.format(mouse.ID),
+		# 						fontsize=10,
+		# 						fontstyle='italic')
 		axs[i%4, i//4].set_xlabel('Hz')
-		axs[i%4, i//4].set_ylabel('Lick Prob.')
+		axs[i%4, i//4].xaxis.set_label_coords(1.05, -0.05)
 
-		plt.tight_layout()
+
+		axs[i%4, i//4].set_ylabel('Lick Prob.')
+		axs[i%4, i//4].spines["top"].set_visible(False)
+		axs[i%4, i//4].spines["right"].set_visible(False)
 
 		for j, noise in enumerate(tag):
 			f, p = mouse.psychoacoustic(tag=[noise], stim_freqs=stim_freqs, threshold=threshold, plot=False)
 			slopes[mouse.ID].append(np.abs((p[-1]-p[0])/(16e3 - 6e3)))
-			axs[i%4, i//4].plot(stim_freqs, p[6:], 'o-', markersize=2, label='WN_{}dB'.format(noise[-3:]))
+			axs[i%4, i//4].plot(stim_freqs, p[6:], 'o-', markersize=2, label='10kHz+WN_{}dB'.format(noise[-3:]))
 
 			axs[i%4, i//4].legend()
-			plt.tight_layout()
 
 	for m in slopes:
 		axs[3, 1].plot(['0', '45', '50', '55', '60'], slopes[m], c='gray', alpha=.5)
@@ -124,11 +143,11 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
 	all_slopes = [np.mean([slopes[m][i] for m in slopes]) for i in range(len(tag)+1)]
 	axs[3, 1].plot(['0', '45', '50', '55', '60'], all_slopes, c='red')
 
-	axs[3, 1].set_title(label='Slope btw extremes'.format(mouse.ID),
-								fontsize=10,
-								fontstyle='italic')
+	# axs[3, 1].set_title(label='Slope btw extremes'.format(mouse.ID),
+	# 							fontsize=10,
+	# 							fontstyle='italic')
 
-
+	plt.tight_layout()
 	plt.savefig(os.path.join(mouse.output, 'psycho_curves_85.svg'))
 	plt.show()
 
@@ -144,12 +163,15 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
 
 #all_psycho(mice, tag=['PCAM'], threshold=80)
 
-noise_psycho(mice, tag=['PCAMN45_', 'PCAMN50_', 'PCAMN55_', 'PCAMN60_'], threshold=60)
+#noise_psycho(mice, tag=['PCAMN45_', 'PCAMN50_', 'PCAMN55_', 'PCAMN60_'], threshold=60)
+all_psycho(mice, tag=['PC_'], threshold=80)
 #mean_psycoacoustic(mice)
 
 # psycho = {}
 # for mouse in mice:
 # 	f, p = mouse.psychoacoustic(tag=['PC_'], threshold=80, stim_freqs=np.geomspace(6e3, 16e3, 16))
-# 	psycho[mouse.ID] = p 
+# 	psycho[mouse.ID] = p
 
 # pickle.dump(psycho, open('frequency_discrimination_data.pkl', 'wb'))
+
+

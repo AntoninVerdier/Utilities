@@ -242,25 +242,25 @@ class Mouse(object):
 
         tasks = np.array([item for f in files for item in f.tr_type])
         corr = np.array([item for f in files for item in f.tr_corr])
-        # if self.reversed:
-        #     if np.max(tasks) > 16:
-        #         licks = [not c if (1 <= tasks[i] <= 8) or (17 <= tasks[i] <= 24) else c for i, c in enumerate(corr)]
-        #     else:
-        #         licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
-        # else:
-        #     licks = [not c if 9 <= tasks[i] <= 16 else c for i, c in enumerate(corr)]
-        #     if np.max(tasks) > 16:
-        #         licks = [not c if (9 <= tasks[i] <= 16) or (25 <= tasks[i] <= 32) else c for i, c in enumerate(corr)]
         if self.reversed:
-            if np.max(tasks) == 12:
-                licks = [not c if (1 <= tasks[i] <= 3) or (7 <= tasks[i] <= 9) else c for i, c in enumerate(corr)]
+            if np.max(tasks) > 16:
+                licks = [not c if (1 <= tasks[i] <= 8) or (17 <= tasks[i] <= 24) else c for i, c in enumerate(corr)]
             else:
-                licks = [not c if 1 <= tasks[i] <= 3 else c for i, c in enumerate(corr)]
+                licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
         else:
-            if np.max(tasks) == 12:
-                licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
-            if np.max(tasks) == 16:
-                licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
+            licks = [not c if 9 <= tasks[i] <= 16 else c for i, c in enumerate(corr)]
+            if np.max(tasks) > 16:
+                licks = [not c if (9 <= tasks[i] <= 16) or (25 <= tasks[i] <= 32) else c for i, c in enumerate(corr)]
+        # if self.reversed:
+        #     if np.max(tasks) == 12:
+        #         licks = [not c if (1 <= tasks[i] <= 3) or (7 <= tasks[i] <= 9) else c for i, c in enumerate(corr)]
+        #     else:
+        #         licks = [not c if 1 <= tasks[i] <= 3 else c for i, c in enumerate(corr)]
+        # else:
+        #     if np.max(tasks) == 12:
+        #         licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
+        #     if np.max(tasks) == 16:
+        #         licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
 
 
 
@@ -364,7 +364,7 @@ class Mouse(object):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
 
             self.xpar = xpar
-            
+
             if rmgaps:
                 self.tr_type, self.tr_licks, self.tr_corr = self.__removeGaps(vectors['TRECORD'], vectors['LICKRECORD'], vectors['correct'], xpar)
             else:
