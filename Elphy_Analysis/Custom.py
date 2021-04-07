@@ -21,6 +21,7 @@ class Mouse(object):
     """docstring for Mouse"""
     def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False):
         self.ID = ID
+        self.path = path
         self.output = output
 
         if self.ID:
@@ -31,7 +32,7 @@ class Mouse(object):
             self.elphy = self.__process_elphy_at_file(path)
         elif path and not elphy_only:
             self.ID = os.path.basename(os.path.normpath(path))
-            self.elphy = self.__process_elphy_at_file(path)
+            #self.elphy = self.__process_elphy_at_file(path)
             self.df_beh = self.__get_data_from_gsheet()
         else:
             print('Please provide a path to retrieve data from elphy dat files')
@@ -138,6 +139,22 @@ class Mouse(object):
         files = [files[i] for i in sorted_dates]
 
         return files
+    def __process_elphy_file_by_tag(self, folder, tag):
+        files = []
+        for file in os.listdir(folder):
+            for t in tag:
+                if t + '_' == file.split('_')[0] + '_':
+                    current_file = self.File(os.path.join(folder, file))
+                    if len(current_file.tr_corr) != 0:
+                        files.append(current_file)
+
+        sorted_dates = np.argsort([datetime.datetime.strptime(f.date, '%d%m%Y') for f in files])
+        files = [files[i] for i in sorted_dates]
+        
+        self.elphy = files
+
+        return files
+
 
     def save(self):
         pass
@@ -194,7 +211,9 @@ class Mouse(object):
     def perf(self, tag=['DIS', 'PC'], plot=False, dateformat='%d%m%Y'):
         """ Compute evolution of mouse's performance following the task's type"""
         if tag:
-            files = [file for file in self.elphy if file.tag in tag]
+            #files = [file for file in self.elphy if file.tag in tag]
+            files = self.__process_elphy_file_by_tag(self.path, tag)
+
 
         correct_tr = [100*sum(f.tr_corr)/len(f.tr_corr) for f in files]
         dates = [f.date for f in files]
@@ -228,10 +247,12 @@ class Mouse(object):
         plt.show()
 
     def psychoacoustic(self, tag=['PC'], last=False, stim_freqs=None, plot=True, date=None, threshold=None):
+        files = self.__process_elphy_file_by_tag(self.path, tag)
+
         if date:
             files = [file for file in self.elphy if file.date in date]
-        else:
-            files = [file for file in self.elphy if file.tag in tag]
+        # else:
+        #     files = [file for file in self.elphy if file.tag in tag]
 
         if last:
             files = [files[-1]]
@@ -242,6 +263,7 @@ class Mouse(object):
 
         tasks = np.array([item for f in files for item in f.tr_type])
         corr = np.array([item for f in files for item in f.tr_corr])
+        
         if self.reversed:
             if np.max(tasks) > 16:
                 licks = [not c if (1 <= tasks[i] <= 8) or (17 <= tasks[i] <= 24) else c for i, c in enumerate(corr)]
