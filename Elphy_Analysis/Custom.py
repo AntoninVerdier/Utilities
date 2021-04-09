@@ -274,14 +274,17 @@ class Mouse(object):
         print('End block : ', len(tasks), len(corr))
         
         if self.reversed:
-            if np.max(tasks) > 16:
-                licks = [not c if (1 <= tasks[i] <= 8) or (17 <= tasks[i] <= 24) else c for i, c in enumerate(corr)]
-            else:
-                licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
+            if np.max(tasks) % 16 == 0:
+                if np.max(tasks) == 32:
+                    licks = [not c if (1 <= tasks[i] <= 8) or (17 <= tasks[i] <= 24) else c for i, c in enumerate(corr)]
+                elif np.max(tasks) == 16:
+                    licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
         else:
-            licks = [not c if 9 <= tasks[i] <= 16 else c for i, c in enumerate(corr)]
-            if np.max(tasks) > 16:
-                licks = [not c if (9 <= tasks[i] <= 16) or (25 <= tasks[i] <= 32) else c for i, c in enumerate(corr)]
+            if np.max(tasks) % 16 == 0:
+                if np.max(tasks) == 32:
+                    licks = [not c if (9 <= tasks[i] <= 16) or (25 <= tasks[i] <= 32) else c for i, c in enumerate(corr)]
+                elif np.max(tasks) == 16:
+                    licks = [not c if 9 <= tasks[i] <= 16 else c for i, c in enumerate(corr)]
         # if self.reversed:
         #     if np.max(tasks) == 12:
         #         licks = [not c if (1 <= tasks[i] <= 3) or (7 <= tasks[i] <= 9) else c for i, c in enumerate(corr)]

@@ -95,10 +95,13 @@ def all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), thresho
 	fig, axs = plt.subplots(4, 2, figsize=(10, 20))
 
 	dys = []
+	shift_errors = []
 	for i, mouse in enumerate(mice):
 		f, p = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, threshold=threshold, plot=False)
 
 		x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, p)
+
+		shift_errors.append(x1 - np.median(stim_freqs))
 
 		axs[i%4, i//4].plot(x, y, label='fit', c='firebrick')
 		axs[i%4, i//4].plot(x, d_y*x + (y1 - d_y * x1))
@@ -183,8 +186,8 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
 #mice_id = ['459','462', '269']
 #mice_id = ['463', '268']
 mice_id = ['459', '461', '462', '267', '269', '268', '463']
-mice = [Mouse(path='/home/anverdie/share/gaia/Data/Behavior/Antonin/660{}'.format(i), tag=['PCAMN45']) for i in mice_id]
-all_psycho(mice, tag=['PCAMN45'])
+mice = [Mouse(path='/home/anverdie/share/gaia/Data/Behavior/Antonin/660{}'.format(i), tag=['PCAM']) for i in mice_id]
+all_psycho(mice, tag=['PCAM'])
 #mean_psycoacoustic(mice)
 
 # psycho = {}
