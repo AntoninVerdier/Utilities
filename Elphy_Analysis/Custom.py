@@ -228,6 +228,7 @@ class Mouse(object):
         dates = np.sort(dates)
 
         if len(files) > 1 and plot:
+            print('fig')
             self.__perf_fig(dates, correct_tr)
 
         return correct_tr, dates
@@ -272,19 +273,23 @@ class Mouse(object):
         corr = np.array([item for f in files for item in f.tr_corr])
 
         print('End block : ', len(tasks), len(corr))
-        
+        print(np.max(tasks))
         if self.reversed:
             if np.max(tasks) % 16 == 0:
                 if np.max(tasks) == 32:
                     licks = [not c if (1 <= tasks[i] <= 8) or (17 <= tasks[i] <= 24) else c for i, c in enumerate(corr)]
                 elif np.max(tasks) == 16:
                     licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
+            if np.max(tasks) == 5:
+                licks = [not c if tasks[i] > 1 else c for i, c in enumerate(corr)]
         else:
             if np.max(tasks) % 16 == 0:
                 if np.max(tasks) == 32:
                     licks = [not c if (9 <= tasks[i] <= 16) or (25 <= tasks[i] <= 32) else c for i, c in enumerate(corr)]
                 elif np.max(tasks) == 16:
                     licks = [not c if 9 <= tasks[i] <= 16 else c for i, c in enumerate(corr)]
+            if np.max(tasks) == 5:
+                licks = [not c if tasks[i] <= 1 else c for i, c in enumerate(corr)]
         # if self.reversed:
         #     if np.max(tasks) == 12:
         #         licks = [not c if (1 <= tasks[i] <= 3) or (7 <= tasks[i] <= 9) else c for i, c in enumerate(corr)]
@@ -388,11 +393,11 @@ class Mouse(object):
 
     class File(object):
         """DAT file as an object for better further use"""
-        def __init__(self, path, rmgaps=False):
+        def __init__(self, path, rmgaps=True):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
-            #self.__removeBadBlocks(0.6, 24)
+            #self.__removeBadBlocks(0.5, 32)
 
         def __extract_data(self, path, rmgaps):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
@@ -414,11 +419,12 @@ class Mouse(object):
         def __removeBadBlocks(self, threshold, bloc_size):
             if len(self.tr_corr)%bloc_size == 0:
                 div = len(self.tr_corr)//bloc_size
-                blocks_to_keep = [i for i, bloc in enumerate(np.split(self.tr_corr, div)) if sum(bloc)/len(bloc) > threshold]
+                print(self.tr_corr, div)
+                blocks_to_keep = [i for i, bloc in enumerate(np.split(np.array(self.tr_corr), div)) if sum(bloc)/len(bloc) > threshold]
                 if blocks_to_keep:
-                    self.tr_type = np.concatenate([bloc for i, bloc in enumerate(np.split(self.tr_type, div)) if i in blocks_to_keep])
-                    self.tr_licks = np.concatenate([bloc for i, bloc in enumerate(np.split(self.tr_licks, div)) if i in blocks_to_keep])
-                    self.tr_corr = np.concatenate([bloc for i, bloc in enumerate(np.split(self.tr_corr, div)) if i in blocks_to_keep])
+                    self.tr_type = np.concatenate([bloc for i, bloc in enumerate(np.split(np.array(self.tr_type), div)) if i in blocks_to_keep])
+                    self.tr_licks = np.concatenate([bloc for i, bloc in enumerate(np.split(np.array(self.tr_licks), div)) if i in blocks_to_keep])
+                    self.tr_corr = np.concatenate([bloc for i, bloc in enumerate(np.split(np.array(self.tr_corr), div)) if i in blocks_to_keep])
                 else:
                     self.tr_type = []
                     self.tr_licks = []

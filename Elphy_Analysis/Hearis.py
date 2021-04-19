@@ -99,12 +99,12 @@ def all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), thresho
 	for i, mouse in enumerate(mice):
 		f, p = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, threshold=threshold, plot=False)
 
-		x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, p)
+		# x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, p)
 
-		shift_errors.append(x1 - np.median(stim_freqs))
+		# shift_errors.append(x1 - np.median(stim_freqs))
 
-		axs[i%4, i//4].plot(x, y, label='fit', c='firebrick')
-		axs[i%4, i//4].plot(x, d_y*x + (y1 - d_y * x1))
+		# axs[i%4, i//4].plot(x, y, label='fit', c='firebrick')
+		# axs[i%4, i//4].plot(x, d_y*x + (y1 - d_y * x1))
 
 
 		axs[i%4, i//4].set_xscale('log')
@@ -116,10 +116,10 @@ def all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), thresho
 								fontstyle='italic')
 		axs[i%4, i//4].legend()
 
-		dys.append(d_y)
+	# 	dys.append(d_y)
 
 
-	axs[3, 1].bar(np.arange(1), np.mean(np.abs(dys)), yerr=np.std(np.abs(dys)), align='center', alpha=0.5, ecolor='black', capsize=10)
+	# axs[3, 1].bar(np.arange(1), np.mean(np.abs(dys)), yerr=np.std(np.abs(dys)), align='center', alpha=0.5, ecolor='black', capsize=10)
 
 	plt.tight_layout()
 	plt.savefig(os.path.join(mouse.output, 'psycho_curves_85.svg'))
@@ -185,9 +185,13 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
 #mice_id = ['268', '269']
 #mice_id = ['459','462', '269']
 #mice_id = ['463', '268']
-mice_id = ['459', '461', '462', '267', '269', '268', '463']
-mice = [Mouse(path='/home/anverdie/share/gaia/Data/Behavior/Antonin/660{}'.format(i), tag=['PCAM']) for i in mice_id]
-all_psycho(mice, tag=['PCAM'])
+mice_id = ['459', '461', '462', '463', '267', '268', '269']
+mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660{}'.format(i), tag=['DISCS4']) for i in mice_id]
+#all_psycho(mice, tag=['DISCS46810'], threshold=0, stim_freqs=np.linspace(0, 5))
+#all_weights(mice)
+all_perfs(mice, tag=['DISCS4'])
+#all_psycho(mice, tag=['DISCS4'], stim_freqs=np.arange(1, 6), threshold=50)
+
 #mean_psycoacoustic(mice)
 
 # psycho = {}
