@@ -92,37 +92,47 @@ def all_perfs(mice, tag=['PC'], plot=False):
 	plt.show()
 
 def all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=None):
-	fig, axs = plt.subplots(4, 2, figsize=(10, 20))
+	fig, axs = plt.subplots(2, 4, figsize=(10, 5), dpi=120)
 
 	dys = []
 	shift_errors = []
 	for i, mouse in enumerate(mice):
 		f, p = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, threshold=threshold, plot=False)
 
-		# x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, p)
+		x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, p)
 
-		# shift_errors.append(x1 - np.median(stim_freqs))
+		shift_errors.append(x1 - np.median(stim_freqs))
 
-		# axs[i%4, i//4].plot(x, y, label='fit', c='firebrick')
-		# axs[i%4, i//4].plot(x, d_y*x + (y1 - d_y * x1))
+		axs[i//4, i%4].plot(x, y, label='fit', c='darkorange')
+		#axs[i//4, i%4].plot(x, d_y*x + (y1 - d_y * x1))
 
+		dys.append(d_y)
 
-		axs[i%4, i//4].set_xscale('log')
-		axs[i%4, i//4].set_ylim(0, 1)
-		axs[i%4, i//4].plot(stim_freqs, p, 'o-', markersize=2, c='royalblue', label='data')
-		axs[i%4, i//4].axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
-		axs[i%4, i//4].set_title(label='Psycho curve of {}'.format(mouse.ID),
+		axs[i//4, i%4].set_xscale('log')
+		axs[i//4, i%4].set_ylim(0, 1)
+		axs[i//4, i%4].plot(stim_freqs, p, 'o-', markersize=3, c='royalblue', label='PC_6_16')
+		axs[i//4, i%4].axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='black', ls='-', linewidth=1)
+		axs[i//4, i%4].set_title(label='{}'.format(mouse.ID),
 								fontsize=10,
 								fontstyle='italic')
-		axs[i%4, i//4].legend()
+		
+		axs[i//4, i%4].set_xlabel('Sound Freq (kHz)', fontsize=11)
+		axs[i//4, i%4].set_ylabel('Go prob', fontsize=11)
+		axs[i//4, i%4].spines["top"].set_visible(False)
+		axs[i//4, i%4].spines["right"].set_visible(False)
+		axs[i//4, i%4].legend(fontsize=7)
 
-	# 	dys.append(d_y)
+	dys = np.array(dys) * (stim_freqs[8] - stim_freqs[7])
+	shift_errors = np.array(shift_errors) / (stim_freqs[8] - stim_freqs[7])
 
+	axs[1, 3].bar(['Slope', 'Shift'], [np.mean(np.abs(dys)), np.mean(np.abs(shift_errors))], 
+				  yerr=[np.std(np.abs(dys)), np.std(np.abs(dys))], 
+				  align='center', alpha=0.5, ecolor=['blue', 'darkorange'], capsize=10)
+	axs[1, 3].set_ylabel('Stimulus.', fontsize=11)
 
-	# axs[3, 1].bar(np.arange(1), np.mean(np.abs(dys)), yerr=np.std(np.abs(dys)), align='center', alpha=0.5, ecolor='black', capsize=10)
 
 	plt.tight_layout()
-	plt.savefig(os.path.join(mouse.output, 'psycho_curves_85.svg'))
+	plt.savefig(os.path.join(mouse.output, 'psychoacoustic.svg'))
 	plt.show()
 
 def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), threshold=85):
@@ -186,10 +196,10 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
 #mice_id = ['459','462', '269']
 #mice_id = ['463', '268']
 mice_id = ['459', '461', '462', '463', '267', '268', '269']
-mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/660{}'.format(i), tag=['DISCS4']) for i in mice_id]
+mice = [Mouse(path='/home/anverdie/share/gaia/Data/Behavior/Antonin/660{}'.format(i), tag=['PC']) for i in mice_id]
 #all_psycho(mice, tag=['DISCS46810'], threshold=0, stim_freqs=np.linspace(0, 5))
 #all_weights(mice)
-all_perfs(mice, tag=['DISCS4'])
+all_psycho(mice, tag=['PC'], threshold=80)
 #all_psycho(mice, tag=['DISCS4'], stim_freqs=np.arange(1, 6), threshold=50)
 
 #mean_psycoacoustic(mice)
