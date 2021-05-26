@@ -19,7 +19,7 @@ from collections import Counter
 
 class Mouse(object):
     """docstring for Mouse"""
-    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None):
+    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, collab=False):
         self.ID = ID
         self.path = path
         self.output = output
@@ -34,14 +34,15 @@ class Mouse(object):
             self.ID = os.path.basename(os.path.normpath(path))
             #self.elphy = self.__process_elphy_at_file(path)
             self.elphy = self.__process_elphy_file_by_tag(path, tag)
-            self.df_beh = self.__get_data_from_gsheet()
+            self.df_beh = self.__get_data_from_gsheet(collab=collab)
         else:
             print('Please provide a path to retrieve data from elphy dat files')
 
-    def __get_data_from_gsheet(self):
+    def __get_data_from_gsheet(self, collab=False):
         """ Retrieve behavioural etadat from Google Sheet"""
         SAMPLE_SPREADSHEET_ID_input = '1PNvkKMTGbVxGGG-2eyWFEtG9dcv3ZVb9m9zVixjRlfc'
-        SAMPLE_RANGE_NAME = 'A1:AA1000'
+        if collab: SAMPLE_SPREADSHEET_ID_input = '1utsDBiSvcNIuYyOS4LiIG0wRCn7fdxf7-EbAjwbXntE'
+        SAMPLE_RANGE_NAME = 'A1:AK1000'
 
         creds = self.__google_credentials()
         service = build('sheets', 'v4', credentials=creds)
@@ -58,7 +59,6 @@ class Mouse(object):
         # Read basic infos given the self_id of the mouse
         mice_ids = [col[0] for col in all_data]
         assert self.ID, 'A mouse ID need to be specified'
-
         mouse_idx = mice_ids.index(self.ID)
 
         # Get basic infos about the mouse and its surgery
@@ -142,6 +142,7 @@ class Mouse(object):
         return files
     def __process_elphy_file_by_tag(self, folder, tag):
         files = []
+        print('Processing files for mice {}...'.format(self.ID))
         for file in os.listdir(folder):
             for t in tag:
                 if t + '_' == file.split('_')[0] + '_':
@@ -210,12 +211,9 @@ class Mouse(object):
 
     def perf(self, tag=['DIS', 'PC'], plot=False, dateformat='%d%m%Y'):
         """ Compute evolution of mouse's performance following the task's type"""
-        if tag:
-            #files = [file for file in self.elphy if file.tag in tag]
-            #files = self.__process_elphy_file_by_tag(self.path, tag)
-            files = self.elphy
 
-
+        files = self.elphy
+        
         correct_tr = [100*sum(f.tr_corr)/len(f.tr_corr) for f in files]
         dates = [f.date for f in files]
         tags = [f.tag for f in files]
@@ -300,6 +298,8 @@ class Mouse(object):
         #         licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
         #     if np.max(tasks) == 16:
         #         licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
+        if np.max(tasks) == 6:
+            licks = licks = [c for i, c in enumerate(corr)]
 
 
 
@@ -391,13 +391,49 @@ class Mouse(object):
         print('Refractory Time :', file.xpar['fix']['RefractoryTime'])
         print('Random Refractory Time :', file.xpar['fix']['RandomRefractoryTime'])
 
+    def score_by_task(self, names=None):
+        # Output the percentage of success for each type of stimulus
+        files = self.elphy
+
+        # ttype = files[0].xpar['table']['TaskType']
+        # ttype_str = ['NOGO' if l == 2 else 'GO' for l in ttype]
+        # ttype_str[0] = 'BLANK' # Add if first stimulus is empty
+
+        tasks = [f.tr_type for f in files]
+        corr = [f.tr_corr for f in files]
+
+        tasks = [t[:len(corr[i])] for i, t in enumerate(tasks)]
+
+        scores = {}
+        for i in np.unique(tasks[0]):
+            scores[i] = []
+            for j, t in enumerate(tasks):
+                masked_array = np.ma.masked_equal(t, i)
+                masked_correctness = corr[j] * masked_array.mask
+
+                curr_score = np.sum(masked_correctness)*100/np.sum(masked_array.mask)
+                scores[i].append(curr_score)
+
+        final_scores = [np.mean(scores[k]) for k in scores]
+        final_std = [np.std(scores[k]) for k in scores]
+        if not names:
+            names = range(1, len(final_scores)+1)
+
+       
+        plt.bar(x=names, height=final_scores, yerr=final_std)
+        plt.show()
+                
+
+
+
+
     class File(object):
         """DAT file as an object for better further use"""
-        def __init__(self, path, rmgaps=True):
+        def __init__(self, path, rmgaps=False):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
-            #self.__removeBadBlocks(0.5, 32)
+            #self.__removeBadBlocks(0.5, 10)
 
         def __extract_data(self, path, rmgaps):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
@@ -453,11 +489,12 @@ class Mouse(object):
 
             return ttype, licks, corr
 
-#mouse = Mouse('/home/pouple/PhD/Data/660267')
 #mouse.psychoacoustic(tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), plot=True, threshold=80)
 #mouse.get_session_info('04032021')
 #mouse.correct_graph('02022021')
-#mouse.summary(tag=['PC'], show=True, stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
+mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/682351/', tag=['DISO'], collab=True)
+mouse.score_by_task(names=['Blank_NOL', '50ms_NOL', '150ms_NOL', 'Blank_L', '50ms_L', '150ms_L'])
+# mouse.weight(plot=True)
 #mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=0)
 
 # make a function to find specific files for one mouse and be able to call it

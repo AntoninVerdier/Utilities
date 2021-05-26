@@ -8,6 +8,9 @@ import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 from Custom import Mouse
+import settings
+
+batch = settings.Batch()
 
 def psycho_week():
 	pass
@@ -195,11 +198,13 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
 #mice_id = ['268', '269']
 #mice_id = ['459','462', '269']
 #mice_id = ['463', '268']
-mice_id = ['459', '461', '462', '463', '267', '268', '269']
-mice = [Mouse(path='/home/anverdie/share/gaia/Data/Behavior/Antonin/660{}'.format(i), tag=['PC']) for i in mice_id]
+
+mice_id = batch.id_first_collab
+mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['DISO'], collab=True) for i in mice_id]
 #all_psycho(mice, tag=['DISCS46810'], threshold=0, stim_freqs=np.linspace(0, 5))
-#all_weights(mice)
-all_psycho(mice, tag=['PC'], threshold=80)
+all_psycho(mice, stim_freqs=list(range(6)))
+all_perfs(mice)
+#all_psycho(mice, tag=['PC'], threshold=80)
 #all_psycho(mice, tag=['DISCS4'], stim_freqs=np.arange(1, 6), threshold=50)
 
 #mean_psycoacoustic(mice)
