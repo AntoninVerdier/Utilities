@@ -15,11 +15,15 @@ from google.auth.transport.requests import Request
 
 from collections import Counter
 
+import settings
+
+batch = settings.Batch()
+
 #from auth import spid
 
 class Mouse(object):
     """docstring for Mouse"""
-    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, collab=False):
+    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, collab=False):
         self.ID = ID
         self.path = path
         self.output = output
@@ -33,7 +37,7 @@ class Mouse(object):
         elif path and not elphy_only:
             self.ID = os.path.basename(os.path.normpath(path))
             #self.elphy = self.__process_elphy_at_file(path)
-            self.elphy = self.__process_elphy_file_by_tag(path, tag)
+            self.elphy = self.__process_elphy_file_by_tag(path, tag, date)
             self.df_beh = self.__get_data_from_gsheet(collab=collab)
         else:
             print('Please provide a path to retrieve data from elphy dat files')
@@ -140,7 +144,7 @@ class Mouse(object):
         files = [files[i] for i in sorted_dates]
 
         return files
-    def __process_elphy_file_by_tag(self, folder, tag):
+    def __process_elphy_file_by_tag(self, folder, tag, date=None):
         files = []
         print('Processing files for mice {}...'.format(self.ID))
         for file in os.listdir(folder):
@@ -154,6 +158,7 @@ class Mouse(object):
         sorted_dates = np.argsort([datetime.datetime.strptime(f.date, '%d%m%Y') for f in files])
         files = [files[i] for i in sorted_dates]
 
+        if date: files = [f for f in files if f.date==date]
         return files
 
 
@@ -399,8 +404,17 @@ class Mouse(object):
         # ttype_str = ['NOGO' if l == 2 else 'GO' for l in ttype]
         # ttype_str[0] = 'BLANK' # Add if first stimulus is empty
 
+
         tasks = [f.tr_type for f in files]
         corr = [f.tr_corr for f in files]
+
+
+
+        muul = [np.array(tasks[i]) * np.array(corr[i]) for i in range(len(tasks))]
+
+        lol = np.concatenate(muul)
+        print(lol)
+        # Then simply count number of occurance in this and compared it to raw task 
 
         tasks = [t[:len(corr[i])] for i, t in enumerate(tasks)]
 
@@ -410,7 +424,7 @@ class Mouse(object):
             for j, t in enumerate(tasks):
                 masked_array = np.ma.masked_equal(t, i)
                 masked_correctness = corr[j] * masked_array.mask
-
+                print(np.sum(masked_correctness), np.sum(masked_array.mask))
                 curr_score = np.sum(masked_correctness)*100/np.sum(masked_array.mask)
                 scores[i].append(curr_score)
 
@@ -421,7 +435,8 @@ class Mouse(object):
 
        
         plt.bar(x=names, height=final_scores, yerr=final_std)
-        plt.show()
+        plt.savefig('{}.png'.format(self.ID))
+        plt.close()
                 
 
 
@@ -429,7 +444,7 @@ class Mouse(object):
 
     class File(object):
         """DAT file as an object for better further use"""
-        def __init__(self, path, rmgaps=False):
+        def __init__(self, path, rmgaps=True):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
@@ -492,8 +507,9 @@ class Mouse(object):
 #mouse.psychoacoustic(tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), plot=True, threshold=80)
 #mouse.get_session_info('04032021')
 #mouse.correct_graph('02022021')
-mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/682351/', tag=['DISO'], collab=True)
-mouse.score_by_task(names=['Blank_NOL', '50ms_NOL', '150ms_NOL', 'Blank_L', '50ms_L', '150ms_L'])
+for m in ['348','349', '350', '351', '352', '353']:
+    mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/682{}/'.format(m), tag=['DISOA'], date='28052021', collab=True)
+    mouse.score_by_task()#names=['Blank_NOL', '50ms_NOL', '150ms_NOL', 'Blank_L', '50ms_L', '150ms_L'])
 # mouse.weight(plot=True)
 #mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=0)
 
