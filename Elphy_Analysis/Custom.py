@@ -400,43 +400,55 @@ class Mouse(object):
         # Output the percentage of success for each type of stimulus
         files = self.elphy
 
-        # ttype = files[0].xpar['table']['TaskType']
-        # ttype_str = ['NOGO' if l == 2 else 'GO' for l in ttype]
-        # ttype_str[0] = 'BLANK' # Add if first stimulus is empty
-
-
         tasks = [f.tr_type for f in files]
         corr = [f.tr_corr for f in files]
 
+        muul = [np.array(tasks[i]) * np.array(corr[i]) for i, f in enumerate(files)]
+        flatten_muul = [int(i) for m in muul for i in m]
+        flatten_tasks = [int(i) for t in tasks for i in t]
 
+        valid = dict(Counter(flatten_muul))
+        alls = dict(Counter(flatten_tasks))
+        valid.pop(0, None)
+        alls.pop(0, None)
 
-        muul = [np.array(tasks[i]) * np.array(corr[i]) for i in range(len(tasks))]
-
-        lol = np.concatenate(muul)
-        print(lol)
-        # Then simply count number of occurance in this and compared it to raw task 
-
-        tasks = [t[:len(corr[i])] for i, t in enumerate(tasks)]
-
-        scores = {}
-        for i in np.unique(tasks[0]):
-            scores[i] = []
-            for j, t in enumerate(tasks):
-                masked_array = np.ma.masked_equal(t, i)
-                masked_correctness = corr[j] * masked_array.mask
-                print(np.sum(masked_correctness), np.sum(masked_array.mask))
-                curr_score = np.sum(masked_correctness)*100/np.sum(masked_array.mask)
-                scores[i].append(curr_score)
-
-        final_scores = [np.mean(scores[k]) for k in scores]
-        final_std = [np.std(scores[k]) for k in scores]
+        scores = [valid[i]/alls[i] if alls[i] !=0 else 0 for i in list(set(flatten_tasks))]
         if not names:
-            names = range(1, len(final_scores)+1)
+            names = range(1, len(scores)+1)
+        
+        plt.bar(x=names, height=scores)
+        plt.savefig('{}.png'.format(self.ID))
+        plt.show()
+        plt.close()
+
+
+
+
+
+        # lol = np.concatenate(muul)
+        # lol = lol.flatten()
+        # # Then simply count number of occurance in this and compared it to raw task 
+
+        # tasks = [t[:len(corr[i])] for i, t in enumerate(tasks)]
+
+        # scores = {}
+        # for i in np.unique(tasks[0]):
+        #     scores[i] = []
+        #     for j, t in enumerate(tasks):
+        #         masked_array = np.ma.masked_equal(t, i)
+        #         masked_correctness = corr[j] * masked_array.mask
+        #         curr_score = np.sum(masked_correctness)*100/np.sum(masked_array.mask)
+        #         scores[i].append(curr_score)
+
+        # final_scores = [np.mean(scores[k]) for k in scores]
+        # final_std = [np.std(scores[k]) for k in scores]
+        # if not names:
+        #     names = range(1, len(final_scores)+1)
 
        
-        plt.bar(x=names, height=final_scores, yerr=final_std)
-        plt.savefig('{}.png'.format(self.ID))
-        plt.close()
+        # plt.bar(x=names, height=final_scores, yerr=final_std)
+        # plt.savefig('{}.png'.format(self.ID))
+        # plt.close()
                 
 
 
@@ -507,8 +519,8 @@ class Mouse(object):
 #mouse.psychoacoustic(tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), plot=True, threshold=80)
 #mouse.get_session_info('04032021')
 #mouse.correct_graph('02022021')
-for m in ['348','349', '350', '351', '352', '353']:
-    mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/682{}/'.format(m), tag=['DISOA'], date='28052021', collab=True)
+for m in batch.id_first_collab:
+    mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/{}/'.format(m), tag=['DISOA'], date='28052021', collab=True)
     mouse.score_by_task()#names=['Blank_NOL', '50ms_NOL', '150ms_NOL', 'Blank_L', '50ms_L', '150ms_L'])
 # mouse.weight(plot=True)
 #mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=0)
