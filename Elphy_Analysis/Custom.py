@@ -396,7 +396,7 @@ class Mouse(object):
         print('Refractory Time :', file.xpar['fix']['RefractoryTime'])
         print('Random Refractory Time :', file.xpar['fix']['RandomRefractoryTime'])
 
-    def score_by_task(self, names=None):
+    def score_by_task(self, names=None, plot=True):
         # Output the percentage of success for each type of stimulus
         files = self.elphy
 
@@ -412,14 +412,18 @@ class Mouse(object):
         valid.pop(0, None)
         alls.pop(0, None)
 
-        scores = [valid[i]/alls[i] if alls[i] !=0 else 0 for i in list(set(flatten_tasks))]
-        if not names:
-            names = range(1, len(scores)+1)
+        scores = [valid[i]*100/alls[i] if alls[i] !=0 else 0 for i in list(set(flatten_tasks))]
+
         
-        plt.bar(x=names, height=scores)
-        plt.savefig('{}.png'.format(self.ID))
-        plt.show()
-        plt.close()
+        if plot:
+            if not names:
+                names = range(1, len(scores)+1)
+            plt.bar(x=names, height=scores)
+            plt.savefig('{}.png'.format(self.ID))
+            plt.show()
+            plt.close()
+
+        return scores
 
 
 
@@ -499,7 +503,6 @@ class Mouse(object):
             licks = list(licks)
             ttype = list(ttype)
             corr = list(corr)
-
             str_licks = [1 if l > 9 else l for l in licks]
             str_licks = [str(i) for i in str_licks]
             str_licks = ''.join(str_licks)
@@ -519,9 +522,9 @@ class Mouse(object):
 #mouse.psychoacoustic(tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), plot=True, threshold=80)
 #mouse.get_session_info('04032021')
 #mouse.correct_graph('02022021')
-for m in batch.id_first_collab:
-    mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/{}/'.format(m), tag=['DISOA'], date='28052021', collab=True)
-    mouse.score_by_task()#names=['Blank_NOL', '50ms_NOL', '150ms_NOL', 'Blank_L', '50ms_L', '150ms_L'])
+# for m in batch.id_first_collab:
+#     mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/{}/'.format(m), tag=['OPTO'], date='01062021', collab=True)
+#     mouse.score_by_task()#names=['Blank_NOL', '50ms_NOL', '150ms_NOL', 'Blank_L', '50ms_L', '150ms_L'])
 # mouse.weight(plot=True)
 #mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=0)
 

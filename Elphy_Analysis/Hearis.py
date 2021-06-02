@@ -182,6 +182,23 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
 	plt.savefig(os.path.join(mouse.output, 'psycho_curves_85.svg'))
 	plt.show()
 
+def all_score_by_task(mice, names=None):
+	fig, axs = plt.subplots(3, 2, figsize=(20, 10))
+
+	for i, mouse in enumerate(mice):
+		score = mouse.score_by_task(names=names, plot=False)
+		axs[i%3, i//3].bar(x=names, height=score)
+		axs[i%3, i//3].set_title('{}'.format(mouse.ID))
+		axs[i%3, i//3].set_axisbelow(True)
+		axs[i%3, i//3].grid(c='gainsboro', linestyle='dashed', axis='y')
+
+
+	plt.suptitle('% Correct depending on stimulus')
+	plt.savefig(os.path.join(mouse.output, 'score_by_task_02062021.svg'))
+
+	plt.show()
+
+
 
 
 #all_weights(mice)
@@ -199,11 +216,11 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
 #mice_id = ['459','462', '269']
 #mice_id = ['463', '268']
 
-mice_id = batch.id_first_collab
-mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['DISOA'], collab=True) for i in mice_id]
+mice_id = ['682348', '682349', '682351', '682350', '682352', '682353']
+mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['OPTO'], date='02062021', collab=True) for i in mice_id]
 #all_psycho(mice, tag=['DISCS46810'], threshold=0, stim_freqs=np.linspace(0, 5))
 
-all_perfs(mice)
+all_score_by_task(mice, names=['Blank', 'NOGO_50ms', 'GO_150ms', 'L_Blank', 'NOGOL_50ms', 'NOGOL_150ms'])
 
 #all_psycho(mice, tag=['PC'], threshold=80)
 #all_psycho(mice, tag=['DISCS4'], stim_freqs=np.arange(1, 6), threshold=50)
