@@ -425,6 +425,40 @@ class Mouse(object):
 
         return scores
 
+    def lick_number_by_task(self, names=None, plot=True):
+        # Output the percentage of success for each type of stimulus
+        files = self.elphy
+
+        tasks = [f.tr_type for f in files]
+        licks = [f.tr_licks for f in files]
+
+        flatten_tasks = [int(i) for t in tasks for i in t]
+        flatten_licks = [int(i) for t in licks for i in t]
+
+        counters = {}
+        for t in list(set(flatten_tasks)):
+            counters[t] = []
+        
+        for i, (t, l) in enumerate(zip(flatten_tasks, flatten_licks)):
+            counters[t].append(l)
+
+        for k in counters:
+            counters[k] = np.mean(counters[k])
+
+        counter_list = []
+        for i in range(1, 7):
+            counter_list.append(counters[i])
+
+        
+        if plot:
+            if not names:
+                names = range(1, len(scores)+1)
+            plt.bar(names, counter_list)
+            plt.savefig('{}.png'.format(self.ID))
+            plt.show()
+            plt.close()
+
+        return counters
 
 
 
@@ -460,11 +494,11 @@ class Mouse(object):
 
     class File(object):
         """DAT file as an object for better further use"""
-        def __init__(self, path, rmgaps=True):
+        def __init__(self, path, rmgaps=False):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
-            #self.__removeBadBlocks(0.5, 10)
+            self.__removeBadBlocks(0.7, 40)
 
         def __extract_data(self, path, rmgaps):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
@@ -473,6 +507,7 @@ class Mouse(object):
 
             if rmgaps:
                 self.tr_type, self.tr_licks, self.tr_corr = self.__removeGaps(vectors['TRECORD'], vectors['LICKRECORD'], vectors['correct'], xpar)
+                print(Counter(self.tr_type[:10]))
             else:
                 self.tr_type = vectors['TRECORD']
                 self.tr_licks = vectors['LICKRECORD']

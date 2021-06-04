@@ -216,22 +216,17 @@ def all_score_by_task(mice, names=None):
 #mice_id = ['459','462', '269']
 #mice_id = ['463', '268']
 
-mice_id = ['682348', '682349', '682351', '682350', '682352', '682353']
-mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['OPTO'], date='02062021', collab=True) for i in mice_id]
-#all_psycho(mice, tag=['DISCS46810'], threshold=0, stim_freqs=np.linspace(0, 5))
+# mice_id = batch.id_second_batch
+# mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['DISP'], collab=False) for i in mice_id]
+# #all_psycho(mice, tag=['DISCS46810'], threshold=0, stim_freqs=np.linspace(0, 5))
+# all_perfs(mice)
 
-all_score_by_task(mice, names=['Blank', 'NOGO_50ms', 'GO_150ms', 'L_Blank', 'NOGOL_50ms', 'NOGOL_150ms'])
+# Collab perf
+mice_id = ['682348', '682349', '682350', '682351', '682352', '682353']
+mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['OPTO'], collab=True) for i in mice_id]
+for m in mice:
+	m.lick_number_by_task(names=['Blank', 'NOGO_50ms', 'GO_150ms', 'L_Blank', 'NOGOL_50ms', 'GOL_150ms'])
+# all_score_by_task(mice, names=['Blank', 'NOGO_50ms', 'GO_150ms', 'L_Blank', 'NOGOL_50ms', 'GOL_150ms'])
 
-#all_psycho(mice, tag=['PC'], threshold=80)
-#all_psycho(mice, tag=['DISCS4'], stim_freqs=np.arange(1, 6), threshold=50)
-
-#mean_psycoacoustic(mice)
-
-# psycho = {}
-# for mouse in mice:
-# 	f, p = mouse.psychoacoustic(tag=['PC_'], threshold=80, stim_freqs=np.geomspace(6e3, 16e3, 16))
-# 	psycho[mouse.ID] = p
-
-# pickle.dump(psycho, open('frequency_discrimination_data.pkl', 'wb'))
 
 
