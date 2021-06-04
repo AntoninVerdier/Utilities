@@ -1,8 +1,9 @@
+# Author : Antonin Verdier
+
 import os
 import re
 import pickle
 import datetime
-import itertools
 import numpy as np
 import pandas as pd
 import elphy_reader as ertd
@@ -19,10 +20,44 @@ import settings
 
 batch = settings.Batch()
 
-#from auth import spid
+
 
 class Mouse(object):
-    """docstring for Mouse"""
+    """ Use to define a Mouse object encapsulating Elphy and Behavioural data and to perform analysis on it.
+
+    Attributes:
+    -----------
+    ID : int
+        Mouse identification number in the mouse house
+    path : str
+        path to folder containing all the elphy files
+    output : str
+        path for figure and data storage
+    
+    Constructors
+    ------------
+    __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, collab=False)
+        Initialize and define which files to load
+
+    Methods
+    -------
+    weight(plot=False)
+        Return weights of the mouse and dates ordered
+    perf(tag=['DIS', 'PC'], plot=False, dateformat='%d%m%Y')
+        Return the total score of the mouse for each session
+    psychoacoustic(self, tag=['PC'], last=False, stim_freqs=None, plot=True, date=None, threshold=None)
+        Return the probabilities of lick for each task
+    summary(self, tag=['PC'], stim_freqs=None, last=False, name='summary', show=False, threshold=None)
+        Provide a global figure with weight, performance and psycoacoustic curve of a mice
+    correct_graph(date)
+        Return the output correct or incorrect for each trial
+    get_session_info(date)
+        Return lick nbumber and timing of a particular session
+    score_by_task(names=None, plot=True)
+        Return the score of the mice for each type of task in the session 
+    lick_number_by_task(names=None, plot=True)
+        Return the number of licks for each type of task in the session 
+   """
     def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, collab=False):
         self.ID = ID
         self.path = path
@@ -236,7 +271,7 @@ class Mouse(object):
 
         return correct_tr, dates
 
-    def psychoacoustic_fig(self, frequencies, prob, stim_freqs):
+    def __psychoacoustic_fig(self, frequencies, prob, stim_freqs):
 
         plt.figure(figsize=(12, 9))
         ax = plt.subplot(111)
@@ -313,7 +348,7 @@ class Mouse(object):
         sorted_P_licks = sorted(P_lick.items())
         frequencies, prob = zip(*sorted_P_licks)
 
-        if plot: self.psychoacoustic_fig(frequencies, prob, stim_freqs)
+        if plot: self.__psychoacoustic_fig(frequencies, prob, stim_freqs)
 
         return frequencies, prob
 
