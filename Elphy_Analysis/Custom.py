@@ -271,7 +271,7 @@ class Mouse(object):
 
         return correct_tr, dates
 
-    def __psychoacoustic_fig(self, frequencies, prob, stim_freqs):
+    def psychoacoustic_fig(self, frequencies, prob, stim_freqs):
 
         plt.figure(figsize=(12, 9))
         ax = plt.subplot(111)
@@ -309,9 +309,7 @@ class Mouse(object):
 
         tasks = np.array([item for f in files for item in f.tr_type])
         corr = np.array([item for f in files for item in f.tr_corr])
-
-        print('End block : ', len(tasks), len(corr))
-        print(np.max(tasks))
+        
         if self.reversed:
             if np.max(tasks) % 16 == 0:
                 if np.max(tasks) == 32:
@@ -348,7 +346,7 @@ class Mouse(object):
         sorted_P_licks = sorted(P_lick.items())
         frequencies, prob = zip(*sorted_P_licks)
 
-        if plot: self.__psychoacoustic_fig(frequencies, prob, stim_freqs)
+        if plot: self.psychoacoustic_fig(frequencies, prob, stim_freqs)
 
         return frequencies, prob
 
@@ -533,7 +531,7 @@ class Mouse(object):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
-            self.__removeBadBlocks(0.7, 40)
+            #self.__removeBadBlocks(0.7, 30)
 
         def __extract_data(self, path, rmgaps):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
@@ -542,7 +540,6 @@ class Mouse(object):
 
             if rmgaps:
                 self.tr_type, self.tr_licks, self.tr_corr = self.__removeGaps(vectors['TRECORD'], vectors['LICKRECORD'], vectors['correct'], xpar)
-                print(Counter(self.tr_type[:10]))
             else:
                 self.tr_type = vectors['TRECORD']
                 self.tr_licks = vectors['LICKRECORD']
@@ -556,7 +553,6 @@ class Mouse(object):
         def __removeBadBlocks(self, threshold, bloc_size):
             if len(self.tr_corr)%bloc_size == 0:
                 div = len(self.tr_corr)//bloc_size
-                print(self.tr_corr, div)
                 blocks_to_keep = [i for i, bloc in enumerate(np.split(np.array(self.tr_corr), div)) if sum(bloc)/len(bloc) > threshold]
                 if blocks_to_keep:
                     self.tr_type = np.concatenate([bloc for i, bloc in enumerate(np.split(np.array(self.tr_type), div)) if i in blocks_to_keep])
