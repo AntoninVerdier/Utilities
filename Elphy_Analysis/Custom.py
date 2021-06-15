@@ -194,6 +194,7 @@ class Mouse(object):
         files = [files[i] for i in sorted_dates]
 
         if date: files = [f for f in files if f.date==date]
+
         return files
 
 
@@ -289,7 +290,6 @@ class Mouse(object):
     def psychoacoustic(self, tag=['PC'], last=False, stim_freqs=None, plot=True, date=None, threshold=None):
         files = self.elphy
 
-        print(self.ID)
         for i, f in enumerate(files):
             if len(f.tr_type) != len(f.tr_corr):
                 files[i].tr_type = files[i].tr_type[:len(f.tr_corr)]
@@ -309,6 +309,9 @@ class Mouse(object):
 
         tasks = np.array([item for f in files for item in f.tr_type])
         corr = np.array([item for f in files for item in f.tr_corr])
+
+        print(np.max(tasks))
+        
         
         if self.reversed:
             if np.max(tasks) % 16 == 0:
@@ -318,6 +321,10 @@ class Mouse(object):
                     licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
             if np.max(tasks) == 5:
                 licks = [not c if tasks[i] > 1 else c for i, c in enumerate(corr)]
+
+            if np.max(tasks) == 12:
+                licks = [not c if (1 <= tasks[i] <= 6) else c for i, c in enumerate(corr)]
+
         else:
             if np.max(tasks) % 16 == 0:
                 if np.max(tasks) == 32:
@@ -326,6 +333,9 @@ class Mouse(object):
                     licks = [not c if 9 <= tasks[i] <= 16 else c for i, c in enumerate(corr)]
             if np.max(tasks) == 5:
                 licks = [not c if tasks[i] <= 1 else c for i, c in enumerate(corr)]
+
+            if np.max(tasks) == 12:
+                licks = [not c if (7 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
         # if self.reversed:
         #     if np.max(tasks) == 12:
         #         licks = [not c if (1 <= tasks[i] <= 3) or (7 <= tasks[i] <= 9) else c for i, c in enumerate(corr)]
@@ -585,7 +595,8 @@ class Mouse(object):
 
             return ttype, licks, corr
 
-#mouse.psychoacoustic(tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), plot=True, threshold=80)
+# mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660268', tag=['PCAM'], collab=False)
+# mouse.psychoacoustic(tag=['PCAM'], stim_freqs=np.geomspace(20, 200, 16), plot=True, threshold=50)
 #mouse.get_session_info('04032021')
 #mouse.correct_graph('02022021')
 # for m in batch.id_first_collab:

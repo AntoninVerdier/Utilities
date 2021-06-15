@@ -1,7 +1,7 @@
 """ This file groups all low and high level analysis function for behavioural data
 """
 import os
-import pickle
+import pickle as pkl 
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -46,10 +46,11 @@ def mean_psycoacoustic(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), d
     plt.figure(figsize=(6, 6))
     ax = plt.subplot(111)
     ax.set_xscale('log')
-    ax.set_ylim(0, 1)
+    ax.set_ylim(0, 1.1)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     psykos = []
+
     for mouse in mice:
         _, probs = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, plot=False, date=date, threshold=threshold)
         if mouse.reversed:
@@ -61,7 +62,37 @@ def mean_psycoacoustic(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), d
     mean_psykos = np.mean(psykos, axis=0)
 
 
-    ax.errorbar(stim_freqs, mean_psykos, yerr=None, color='blue', linewidth=2, markersize=5, marker='o')
+    ax.errorbar(stim_freqs, mean_psykos, yerr=None, color='forestgreen', linewidth=2, markersize=5, marker='o')
+    plt.tight_layout()
+
+    plt.savefig('../Output/Psychoacoustic.svg')
+    plt.show()
+
+def mean_psycoacoustic_noise(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), date=None, threshold=None, plot=False):
+    """
+
+    """
+    plt.figure(figsize=(6, 6))
+    ax = plt.subplot(111)
+    ax.set_xscale('log')
+    ax.set_ylim(0, 1.1)
+    ax.spines["top"].set_visible(False)
+    ax.spines["right"].set_visible(False)
+    psykos = []
+
+    for mouse in mice:
+        _, probs = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, plot=False, date=date, threshold=threshold)
+        if mouse.reversed:
+            probs = [1 - p for p in probs]
+
+        ax.plot(stim_freqs, probs, linewidth=2, c='gray', alpha=0.4)
+        psykos.append(probs)
+    psykos = np.array(psykos)
+    mean_psykos = np.mean(psykos, axis=0)
+
+
+    ax.errorbar(stim_freqs, mean_psykos, yerr=None, color='forestgreen', linewidth=2, markersize=5, marker='o')
+    plt.tight_layout()
 
     plt.savefig('../Output/Psychoacoustic.svg')
     plt.show()
@@ -238,11 +269,13 @@ def all_score_by_task(mice, names=None):
 
 # Collab perf
 mice_id = batch.id_first_batch
-mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['PC'], collab=False) for i in mice_id]
+mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['PCAMN60'], collab=False) for i in mice_id]
+pkl.dump(mice, open('mice_fig_psy_1.pkl', 'wb'))
 
 #all_perfs(mice, tag=['PC'])
-mean_psycoacoustic(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=80)
+mean_psycoacoustic_noise(mice, tag=['PCAMN60'], stim_freqs=np.geomspace(20, 200, 6), threshold=60)
 # all_score_by_task(mice, names=['Blank', 'NOGO_50ms', 'GO_150ms', 'L_Blank', 'NOGOL_50ms', 'GOL_150ms'])
+
 
 
 
