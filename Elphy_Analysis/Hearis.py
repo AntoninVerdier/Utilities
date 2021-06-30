@@ -25,13 +25,14 @@ def d_sigmoid(x, L, x0, k, b):
     return y
 
 def fit_sigmoid(f, p):
-    p0 = [1, np.mean(f), 0.005, 0] # this is an mandatory initial guess
-    popt, pcov = curve_fit(sigmoid, f, p, p0, method='lm')
+    p0 = [-1, np.mean(f), 0.01, 1] # this is an mandatory initial guess
+    popt, pcov = curve_fit(sigmoid, f, p, p0, method='lm', maxfev=1000000)
+    perr = np.sqrt(np.diag(pcov))
 
-    x = np.geomspace(6e3, 16e3, 1000)
+    x = f
     y = sigmoid(x, *popt)
 
-    d_y = d_sigmoid(popt[1], *popt)
+    d_y = np.max(np.abs(d_sigmoid(popt[1], *popt)))
 
     x1 = popt[1]
     y1 = sigmoid(popt[1], *popt)
@@ -39,7 +40,7 @@ def fit_sigmoid(f, p):
     return x, y, d_y, x1, y1
 
 
-def mean_psycoacoustic(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), date=None, threshold=None, plot=False):
+def mean_psycoacoustic(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), date=None, threshold=None, plot=False):
     """
 
     """
@@ -59,10 +60,11 @@ def mean_psycoacoustic(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), d
         ax.plot(stim_freqs, probs, linewidth=2, c='gray', alpha=0.4)
         psykos.append(probs)
     psykos = np.array(psykos)
+    np.save('psykos_panel_a.npy', psykos)
     mean_psykos = np.mean(psykos, axis=0)
 
 
-    ax.errorbar(stim_freqs, mean_psykos, yerr=None, color='forestgreen', linewidth=2, markersize=5, marker='o')
+    ax.errorbar(stim_freqs, mean_psykos, yerr=None, color='forestgreen', linewidth=2, markersize=6, marker='o')
     plt.tight_layout()
 
     plt.savefig('../Output/Psychoacoustic.svg')
@@ -72,28 +74,60 @@ def mean_psycoacoustic_noise(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 
     """
 
     """
-    plt.figure(figsize=(6, 6))
+    fig = plt.figure(figsize=(6, 6))
     ax = plt.subplot(111)
     ax.set_xscale('log')
     ax.set_ylim(0, 1.1)
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
-    psykos = []
+    no_noise_p = []
+    colors = ['#faa307', '#f48c06', '#e85d04', '#dc2f02']
+    labels = ['45dB', '50dB', '55dB', '60dB']
 
-    for mouse in mice:
-        _, probs = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, plot=False, date=date, threshold=threshold)
-        if mouse.reversed:
-            probs = [1 - p for p in probs]
+    dys=[]
+    errs=[]
+    for i, noise_level in enumerate(tag):
+        print(noise_level)
+        psykos = []
+        curr_d = []
+        for mouse in mice:
+            _, probs = mouse.psychoacoustic(tag=noise_level, stim_freqs=stim_freqs, plot=False, date=date, threshold=threshold)
+            if mouse.reversed:
+                probs = [1 - p for p in probs]
 
-        ax.plot(stim_freqs, probs, linewidth=2, c='gray', alpha=0.4)
-        psykos.append(probs)
-    psykos = np.array(psykos)
-    mean_psykos = np.mean(psykos, axis=0)
+            psykos.append(probs)
+
+            #x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, probs[6:])
+            #ax[0].plot(x, y, color='black', alpha=0.4, linewidth=4, markersize=6, marker='o', label=labels[i])
+
+            #curr_d.append(d_y)
 
 
-    ax.errorbar(stim_freqs, mean_psykos, yerr=None, color='forestgreen', linewidth=2, markersize=5, marker='o')
+        # dys.append(np.mean(curr_d))
+        # errs.append(np.std(curr_d))
+
+        psykos = np.array(psykos)
+        mean_psykos = np.mean(psykos, axis=0)
+        no_noise_p.append(mean_psykos)
+
+
+        ax.plot(stim_freqs, mean_psykos[6:], color=colors[i], linewidth=2, markersize=5, marker='o', label=labels[i])
+        
+        #x, y, d_y, x1, y1, perr = fit_sigmoid(stim_freqs, no_noise_p[:6])
+
+           
+    no_noise_p = np.mean(np.array(no_noise_p), axis=0)
+    
+    ax.plot(stim_freqs, no_noise_p[:6], linewidth=2, c='gray', alpha=0.4)    
+    #ax[0].plot(x, y, label='fit', c='blue')
+    ax.legend()
+    errs = [0] + errs
+    dys = [0] + dys
+    
+
+    #ax[1].bar(x=['0dB', '45dB', '50dB', '55dB', '60dB'] , height=dys, color='royalblue', yerr=errs)
+
     plt.tight_layout()
-
     plt.savefig('../Output/Psychoacoustic.svg')
     plt.show()
 
@@ -122,13 +156,13 @@ def all_weights(mice, plot=False):
 
     plt.savefig(os.path.join(mouse.output, 'weights_followup.svg'))
 
-def all_perfs(mice, tag=['PC'], plot=False):
+def all_perfs(mice, plot=False):
 
     fig, axs = plt.subplots(4, 2, figsize=(20, 20))
     fig.suptitle('Perfs\' follow up - AVEC GAP REMOVAL')
 
     for i, mouse in enumerate(mice):
-        corr, d = mouse.perf(tag=tag, plot=plot)
+        corr, d, _ = mouse.perf(plot=plot)
 
         axs[i%4, i//4].yaxis.grid(c='gainsboro', ls='--')
         axs[i%4, i//4].plot(d, corr, 'o-')
@@ -137,6 +171,58 @@ def all_perfs(mice, tag=['PC'], plot=False):
         axs[i%4, i//4].set_title(label='Perf evolution of {}'.format(mouse.ID),
                                 fontsize=10,
                                 fontstyle='italic')
+    plt.savefig(os.path.join(mouse.output, 'perf_followup_PC_gaps.svg'))
+    plt.show()
+
+def all_perfs_once(mice):
+
+    corrs, dates, tags = [], [], []
+    means = {}
+    tagss = {}
+
+    all_d = []
+    for i, mouse in enumerate(mice):
+        corr, d, t = mouse.perf(rmcons=True)
+        all_d += list(d)
+    all_d = np.sort(list(set(all_d)))
+
+    for d in all_d:
+        means[d] = []
+        tagss[d] = []
+
+    for i, mouse in enumerate(mice):
+        corr, d, t = mouse.perf(rmcons=True)
+        dates.append(d)
+        corrs.append(corr)
+        tags.append(t)
+
+        for i, j in enumerate(d):
+            means[j].append(corr[i])
+            tagss[j].append(t[i])
+
+        colors = ['red' if t[i] == 'DIS_' else 'lightsteelblue' for i in range(len(t))]
+        colors = [j if not ((corr[i] >= 80) and (t[i] == 'PC_')) else '#0000ffff' for i, j in enumerate(colors)]
+
+        plt.grid(c='gainsboro', ls='--', axis='y')
+        plt.plot(d, corr, color='slategrey', alpha=1)
+        plt.scatter(d, corr, c=colors)
+
+    average_perf = []
+    average_dates = []
+    average_tags = []
+    
+    for k in means:
+        if tagss[k].count(tagss[k][0]) == len(tagss[k]):
+            day_mean = np.mean(means[k])
+            average_perf.append(day_mean)
+            average_dates.append(k)
+
+
+    plt.plot(average_dates, average_perf, color='red')
+
+
+    plt.ylim(0, 100)
+    plt.yticks(np.linspace(0, 100, 11))
     plt.savefig(os.path.join(mouse.output, 'perf_followup_PC_gaps.svg'))
     plt.show()
 
@@ -192,7 +278,6 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
         slopes[mouse.ID] = []
         f, p = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, threshold=threshold, plot=False)
 
-        slopes[mouse.ID].append(np.abs((p[-1]-p[0])/(16e3 - 6e3)))
         axs[i%4, i//4].set_xscale('log')
         axs[i%4, i//4].plot(stim_freqs, p[:6], 'o-', markersize=2, label='10kHz')
         axs[i%4, i//4].axvline(x=(stim_freqs[int(len(stim_freqs)/2)-1]+stim_freqs[int(len(stim_freqs)/2)])/2, c='red', ls='--', linewidth=1)
@@ -214,11 +299,11 @@ def noise_psycho(mice, tag=['PCAMN45'], stim_freqs=np.geomspace(20, 200, 6), thr
 
             #axs[i%4, i//4].legend()
 
-    for m in slopes:
-        axs[3, 1].plot(['0', '45', '50', '55', '60'], slopes[m], c='gray', alpha=.5)
+    # for m in slopes:
+    #     axs[3, 1].plot(['0', '45', '50', '55', '60'], slopes[m], c='gray', alpha=.5)
 
-    all_slopes = [np.mean([slopes[m][i] for m in slopes]) for i in range(len(tag)+1)]
-    axs[3, 1].plot(['0', '45', '50', '55', '60'], all_slopes, c='red')
+    # all_slopes = [np.mean([slopes[m][i] for m in slopes]) for i in range(len(tag)+1)]
+    # axs[3, 1].plot(['0', '45', '50', '55', '60'], all_slopes, c='red')
 
     # axs[3, 1].set_title(label='Slope btw extremes'.format(mouse.ID),
     #                           fontsize=10,
@@ -244,6 +329,98 @@ def all_score_by_task(mice, names=None):
 
     plt.show()
 
+def histogram_slopes(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), date=None, threshold=None, plot=False):
+    fig = plt.figure(figsize=(6, 6))
+    ax = plt.subplot(111)
+
+    labels = ['45dB', '50dB', '55dB', '60dB']
+    dys = {}
+    for noise in tag:
+        dys[noise] = []
+    
+    for i, noise_level in enumerate(tag):
+        for mouse in mice:
+            _, probs = mouse.psychoacoustic(tag=noise_level, stim_freqs=stim_freqs, plot=False, date=date, threshold=threshold)
+            if mouse.reversed:
+                probs = [1 - p for p in probs]
+
+            x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, probs[6:])
+            dys[noise_level].append(d_y)
+            
+            #ax.set_xscale('log')
+            #ax.plot(stim_freqs, probs[6:], color='red')
+            #ax.plot(x, y, color='gray')
+
+        #ax.bar(['45db'], height=[np.mean(dys)], yerr=np.std(dys))
+
+    dmeans = []
+    xs = []
+    for d in dys:
+        dmeans.append(np.mean(dys[d]))
+        xs.append(d)
+
+
+
+    ax.bar(x=xs, height=dmeans, yerr=np.std(dmeans))
+    plt.tight_layout()
+    plt.savefig('../Output/Psychoacoustic.svg')
+    plt.show()
+
+def histogram_slopes_PC(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), date=None, threshold=None, plot=False):
+    fig = plt.figure(figsize=(3, 4))
+    ax = plt.subplot(111)
+
+    labels = ['Task 1', 'Task 2']
+    dys  = {'Task 1': [], 'Task 2': []}
+    
+    for i, task in enumerate(tag):
+        if not i:
+            threshold = 80
+            stim_freqs=np.geomspace(6e3, 16e3, 16)
+        else:
+            threshold = 65
+            stim_freqs=np.geomspace(20, 200, 16)
+
+        for mouse in mice:
+            _, probs = mouse.psychoacoustic(tag=task, stim_freqs=stim_freqs, plot=False, date=date, threshold=threshold)
+            if mouse.reversed:
+                probs = [1 - p for p in probs]
+
+            if not i:
+                x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, probs)
+                dys[labels[i]].append(d_y)
+                # ax.plot(stim_freqs, probs, color='orange')
+                # ax.plot(x, y, color='black')
+            else:
+                x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, probs)
+                dys[labels[i]].append(d_y) # to account for difference in scales
+                # ax.plot(stim_freqs, probs, color='red')
+                # ax.plot(x, y, color='blue')
+            
+            #ax.set_xscale('log')
+
+
+        #ax.bar(['45db'], height=[np.mean(dys)], yerr=np.std(dys))
+    dmeans = [np.mean(dys[k]) for k in dys]
+
+    edgecolors = ['#0000ffff', '#228b22ff']
+    colors = ['#0000ff19', '#228b2219']
+
+
+
+    ax.bar(x=labels, height=dmeans, color=colors, edgecolor=edgecolors)
+
+    coord = [0, 1]
+    for i, c in enumerate(coord):
+        if not i:
+            ax.scatter([c]*7, dys[labels[i]], color='#0000ff23')
+        else:
+            ax.scatter([c]*7, dys[labels[i]], color='#228b2223')
+
+
+    plt.tight_layout()
+    plt.savefig('../Output/Psychoacoustic.svg')
+    plt.show()
 
 
 
@@ -269,11 +446,12 @@ def all_score_by_task(mice, names=None):
 
 # Collab perf
 mice_id = batch.id_first_batch
-mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['PCAMN60'], collab=False) for i in mice_id]
-pkl.dump(mice, open('mice_fig_psy_1.pkl', 'wb'))
+mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['PC', 'PCAM'], collab=False, rmgaps=True) for i in mice_id]
 
+histogram_slopes_PC(mice, tag=['PC', 'PCAM'], stim_freqs=np.geomspace(6e3, 16e3, 16))
+#mean_psycoacoustic_noise(mice, tag=['PCAMN45', 'PCAMN50', 'PCAMN55', 'PCAMN60'], stim_freqs=np.geomspace(20, 200, 6), threshold=65)
 #all_perfs(mice, tag=['PC'])
-mean_psycoacoustic_noise(mice, tag=['PCAMN60'], stim_freqs=np.geomspace(20, 200, 6), threshold=60)
+#all_perfs_once(mice)
 # all_score_by_task(mice, names=['Blank', 'NOGO_50ms', 'GO_150ms', 'L_Blank', 'NOGOL_50ms', 'GOL_150ms'])
 
 
