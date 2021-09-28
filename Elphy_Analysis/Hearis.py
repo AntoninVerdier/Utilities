@@ -52,6 +52,7 @@ def mean_psycoacoustic(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16),
     ax.spines["right"].set_visible(False)
     psykos = []
 
+    data_to_save = {}
     for mouse in mice:
         _, probs = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, plot=False, date=date, threshold=threshold)
         if mouse.reversed:
@@ -59,9 +60,20 @@ def mean_psycoacoustic(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16),
 
         ax.plot(stim_freqs, probs, linewidth=2, c='gray', alpha=0.4)
         psykos.append(probs)
+
+        data_to_save[mouse.ID] = probs
+    
     psykos = np.array(psykos)
     np.save('psykos_panel_a.npy', psykos)
     mean_psykos = np.mean(psykos, axis=0)
+
+    data_to_save['mean_psykos'] = mean_psykos
+    data_to_save['stim_freqs'] = stim_freqs
+
+
+    x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, mean_psykos)
+    ax.plot(x, y, color='red')
+    print(d_y)
 
 
     ax.errorbar(stim_freqs, mean_psykos, yerr=None, color='forestgreen', linewidth=2, markersize=6, marker='o')
@@ -70,6 +82,7 @@ def mean_psycoacoustic(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16),
     plt.savefig('../Output/Psychoacoustic.svg')
     plt.show()
 
+    return data_to_save
 def mean_psycoacoustic_noise(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), date=None, threshold=None, plot=False):
     """
 
@@ -190,6 +203,7 @@ def all_perfs_once(mice):
         means[d] = []
         tagss[d] = []
 
+    data_to_save = []
     for i, mouse in enumerate(mice):
         corr, d, t = mouse.perf(rmcons=True)
         dates.append(d)
@@ -207,9 +221,10 @@ def all_perfs_once(mice):
         plt.plot(d, corr, color='slategrey', alpha=1)
         plt.scatter(d, corr, c=colors)
 
+        data_to_save.append([d, corr, colors])
+
     average_perf = []
     average_dates = []
-    average_tags = []
     
     for k in means:
         if tagss[k].count(tagss[k][0]) == len(tagss[k]):
@@ -225,6 +240,8 @@ def all_perfs_once(mice):
     plt.yticks(np.linspace(0, 100, 11))
     plt.savefig(os.path.join(mouse.output, 'perf_followup_PC_gaps.svg'))
     plt.show()
+
+    return average_dates, average_perf, data_to_save 
 
 def all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), threshold=None):
     fig, axs = plt.subplots(2, 4, figsize=(10, 5), dpi=120)
@@ -334,7 +351,7 @@ def histogram_slopes(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), dat
     ax = plt.subplot(111)
 
     labels = ['45dB', '50dB', '55dB', '60dB']
-    dys = {}
+    dys = {}    
     for noise in tag:
         dys[noise] = []
     
@@ -343,6 +360,7 @@ def histogram_slopes(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), dat
             _, probs = mouse.psychoacoustic(tag=noise_level, stim_freqs=stim_freqs, plot=False, date=date, threshold=threshold)
             if mouse.reversed:
                 probs = [1 - p for p in probs]
+
 
             x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, probs[6:])
             dys[noise_level].append(d_y)
@@ -372,8 +390,10 @@ def histogram_slopes_PC(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), 
 
     labels = ['Task 1', 'Task 2']
     dys  = {'Task 1': [], 'Task 2': []}
+
     
     for i, task in enumerate(tag):
+        all_probes = []
         if not i:
             threshold = 80
             stim_freqs=np.geomspace(6e3, 16e3, 16)
@@ -385,6 +405,8 @@ def histogram_slopes_PC(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), 
             _, probs = mouse.psychoacoustic(tag=task, stim_freqs=stim_freqs, plot=False, date=date, threshold=threshold)
             if mouse.reversed:
                 probs = [1 - p for p in probs]
+
+            all_probes.append(probs)
 
             if not i:
                 x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, probs)
@@ -398,7 +420,6 @@ def histogram_slopes_PC(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), 
                 # ax.plot(x, y, color='blue')
             
             #ax.set_xscale('log')
-
 
         #ax.bar(['45db'], height=[np.mean(dys)], yerr=np.std(dys))
     dmeans = [np.mean(dys[k]) for k in dys]
@@ -418,9 +439,11 @@ def histogram_slopes_PC(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), 
             ax.scatter([c]*7, dys[labels[i]], color='#228b2223')
 
 
+
     plt.tight_layout()
     plt.savefig('../Output/Psychoacoustic.svg')
     plt.show()
+
 
 
 
@@ -446,9 +469,35 @@ def histogram_slopes_PC(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), 
 
 # Collab perf
 mice_id = batch.id_first_batch
-mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['PC', 'PCAM'], collab=False, rmgaps=True) for i in mice_id]
+mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['DISAM'], collab=False, rmgaps=False) for i in mice_id]
+for mouse in mice:
+    files = mouse.elphy
+    files = [f for f in files]
+    tasks = np.array([item for f in files for item in f.tr_type])
+    corr = np.array([item for f in files for item in f.tr_corr])
+    types = np.array([item for f in files for item in f.tr_corr])
+    licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
+    #licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
 
-histogram_slopes_PC(mice, tag=['PC', 'PCAM'], stim_freqs=np.geomspace(6e3, 16e3, 16))
+    
+    w = 50
+    tasks = [4 if t == 1 else t for t in tasks ]
+    tasks = [1 if t == 3 else t for t in tasks ]
+    rewards = [0 if t == 2 else t for t in tasks]
+
+
+    rewarded_trials = np.convolve([c for i, c in enumerate(corr) if rewards[i] == 1], np.ones(w))
+    non_rewarded_trials = np.convolve([c for i, c in enumerate(corr) if rewards[i] == 0], np.ones(w))
+    blank_trials = np.convolve([c for i, c in enumerate(corr) if rewards[i] == 4], np.ones(w))
+    
+    plt.plot(rewarded_trials, c='blue')
+    plt.plot(non_rewarded_trials, c='red')
+    plt.plot(blank_trials, c='green')
+    plt.show()
+# pkl.dump(mice, open('Panel_D_mice.pkl', 'wb'))
+# data_to_save = mean_psycoacoustic(mice, 'PC', stim_freqs=np.geomspace(20, 200, 16), threshold=65)
+# pkl.dump(data_to_save, open('Panel_D_data.pkl', 'wb'))
+
 #mean_psycoacoustic_noise(mice, tag=['PCAMN45', 'PCAMN50', 'PCAMN55', 'PCAMN60'], stim_freqs=np.geomspace(20, 200, 6), threshold=65)
 #all_perfs(mice, tag=['PC'])
 #all_perfs_once(mice)
