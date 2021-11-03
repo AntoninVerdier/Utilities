@@ -73,5 +73,5 @@ for sound in track(all_psth, description='Drawing Figures...'):
 	ax.set_xlabel('Time (ms)')
 	ax.set_ylabel('# of spikes')
 	ax.set_title('{}'.format(sound[:-4]))
-	plt.savefig('Output/{}.png'.format(sound[:-4]), dpi=150)
+	plt.savefig(os.path.join(paths.Output, '{}.png'.format(sound[:-4])), dpi=150)
 	plt.close()

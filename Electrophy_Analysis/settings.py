@@ -5,6 +5,7 @@ class paths():
 		self.Ksdir = '/home/user/Documents/Antonin/DataEphys/Antonin_21102021_211021_191144/raw_amp'
 		self.SoundInfo = '/home/user/Documents/Antonin/DataEphys/MouseAntonin_Rec1_20211021T19_12_11/SoundInfo.mat'
 		self.digitalin = '/home/user/Documents/Antonin/DataEphys/Antonin_21102021_211021_191144/digitalin.dat'
+		self.Output = 'Output/'
 
 class params():
 	def __init__(self):
