@@ -75,3 +75,6 @@ for sound in track(all_psth, description='Drawing Figures...'):
 	ax.set_title('{}'.format(sound[:-4]))
 	plt.savefig(os.path.join(paths.Output, '{}.png'.format(sound[:-4])), dpi=150)
 	plt.close()
+
+
+# May be useful to get correlation matrices between histograms
