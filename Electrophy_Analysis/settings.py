@@ -14,7 +14,7 @@ class params():
 	def __init__(self):
 		self.fs = 20000
 		self.pad_before = 0.0 * self.fs
-		self.pad_after = 0.1 * self.fs	
+		self.pad_after = 0.2 * self.fs	
 
 		self.task1 = [52, 53, 54, 56, 57, 59, 60, 62, 31, 32, 34, 35, 37, 38, 40, 41]
 		self.task2 = [44, 45, 46, 47, 48, 49, 50, 51, 55, 58, 61, 33, 36, 39, 42, 43]
