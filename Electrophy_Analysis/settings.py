@@ -2,8 +2,8 @@ import os
 
 class paths():
 	def __init__(self):
-		self.Ksdir = '/home/user/Documents/Antonin/DataEphys/Antonin_08112021_2/Antonin_08112021__211108_183744/'
-		self.SoundInfo = '/home/user/Documents/Antonin/DataEphys/20211108T18_37_57/SoundInfo.mat'
+		self.Ksdir = '/home/user/Documents/Antonin/DataEphys/Antonin_23112021/Antonin_22112021_211123_154603'
+		self.SoundInfo = '/home/user/Documents/Antonin/DataEphys/Antonin_23112021/20211123T15_46_16/SoundInfo.mat'
 		self.Output = os.path.join(self.Ksdir, 'Output')
 
 		if not os.path.exists(self.Output):

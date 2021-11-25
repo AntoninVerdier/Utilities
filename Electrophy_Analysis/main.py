@@ -14,14 +14,14 @@ from sklearn.model_selection import train_test_split, cross_val_score, LeaveOneO
 
 
 import settings as s
-
 from Recording import Recording
 
 paths = s.paths()
 params = s.params()
 
 new_rec = Recording(paths.Ksdir, paths.SoundInfo)
-new_rec.clean_data(quality='mua')
+new_rec.select_data_quality(quality='good')
+new_rec.new_ttl_alignment()
 print(new_rec)
 
 
@@ -37,7 +37,7 @@ def load_data_ks():
 
 	sound_info = sio.loadmat(paths.SoundInfo)
 
-	f = open(paths.digitalin, 'rb') 
+	f = open(os.path.join(paths.Ksdir, 'digitalin.dat'), 'rb') 
 	sd_array = np.fromfile(f, np.int16)
 	f.close()
 	ttl_indices = np.where(np.insert(np.diff(sd_array), 0, 0) == 1)[0]
@@ -115,7 +115,7 @@ for i, t in enumerate([params.task1, params.task2]):
 		pop_vectors = get_pop_vectors(sp_cluster, sp_times, s_vector, ttl_indices, pad_after=p, task=t)
 
 		X = np.array([stim[pres] for stim in pop_vectors for pres in stim])
-		y = np.concatenate(([0]*8*15, [1]*8*15))
+		y = np.concatenate(([0]*8*25, [1]*8*25))
 
 
 		score = compute_svm(X, y)
