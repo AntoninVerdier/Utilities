@@ -19,6 +19,9 @@ class Recording():
 		self.sound_path = sound_info
 		self.date = 0 # To define
 		self.idxs_clu = None
+		self.output = os.path.join(self.ksdir, 'output')
+		if not os.path.exists(self.output):
+			os.makedirs(self.output)
 		self.__load_data()
 
 	def __add__(self, other, n_pres=15):
@@ -88,6 +91,8 @@ class Recording():
 		self.idxs_clu = []
 		for clu in np.unique(self.sp_clu):
 			self.idxs_clu.append(np.where(self.sp_clu == clu)[0])
+		self.n_clu = len(self.idxs_clu)
+
 
 	def __ttl_alignment_single_cpu(self, pad_before=params.pad_before, pad_after=params.pad_after):
 		if not self.idxs_clu:
@@ -130,7 +135,7 @@ class Recording():
 			else:
 				self.__ttl_alignment_single_cpu(pad_before, pad_after)
 
-			pkl.dump(self.d_stims, open('{}_aligned_spikes.pkl'.format(self.name), 'wb'))
+			pkl.dump(self.d_stims, open(os.path.join(self.output, '{}_aligned_spikes.pkl'.format(self.name)), 'wb'))
 
 
 	def get_population_vectors(self, pad_before, pad_after):

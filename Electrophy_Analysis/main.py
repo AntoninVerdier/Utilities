@@ -19,6 +19,19 @@ from Recording import Recording
 paths = s.paths()
 params = s.params()
 
+
+recs = []
+for folder in os.listdir('/home/user/Documents/Antonin/DataEphys/To_analyze'):
+	cp = os.path.join('/home/user/Documents/Antonin/DataEphys/To_analyze', folder)
+	print('Analyzing {} ...'.format(folder))
+	rec = Recording(cp, os.path.join(cp, 'SoundInfo.mat'), name=folder)
+	rec.select_data_quality(quality='good')
+	rec.ttl_alignment(multi=False)
+	recs.append(rec)
+
+total_rec = np.sum(recs)
+total_rec.get_population_vectors(0, 500)
+
 rec = Recording(paths.Ksdir, paths.SoundInfo, name='testing')
 rec.select_data_quality(quality='good')
 rec.ttl_alignment(multi=False)
@@ -26,8 +39,10 @@ rec.get_timings_vectors(0, 500)
 
 
 
+
 def compute_svm(X, y):
 	clf = svm.SVC()
+	########## Need to make sure that data is shuffled
 	scores = cross_val_score(clf, X, y, cv=5)
 	return scores
 
@@ -55,7 +70,7 @@ def svm_preformance(rec):
 svm_preformance(rec)
 
 # Still need to drax psycoM curves
-
+Q
 	
 		
 
