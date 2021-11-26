@@ -22,6 +22,9 @@ params = s.params()
 rec = Recording(paths.Ksdir, paths.SoundInfo, name='testing')
 rec.select_data_quality(quality='good')
 rec.ttl_alignment(multi=False)
+rec.get_timings_vectors(0, 500)
+
+
 
 def compute_svm(X, y):
 	clf = svm.SVC()
@@ -32,7 +35,7 @@ def svm_preformance(rec):
 	for i, t in enumerate([params.task1, params.task2]):
 		scores = []
 		for p in track(np.arange(50, 1000, 50), description='Compute SVM for each task ...'):
-			pop_vectors = rec.get_population_vectors(0, p)
+			pop_vectors = rec.get_timings_vectors(0, p)
 
 			X = np.array([pop_vectors[stim][p] for stim in t for p in pop_vectors[stim]])
 			if i < 2:

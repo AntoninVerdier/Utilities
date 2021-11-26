@@ -12,13 +12,25 @@ from rich.progress import track
 params = s.params()
 class Recording():
 	"""docstring for Recording"""
-	def __init__(self, ksdir, sound_info, name=None):
+	def __init__(self, ksdir, sound_info, name=None, fs=20000):
+		self.fs = fs
 		self.name = name
 		self.ksdir = ksdir
 		self.sound_path = sound_info
 		self.date = 0 # To define
 		self.idxs_clu = None
 		self.__load_data()
+
+	def __add__(self, other, n_pres=15):
+		selfkeys = [k for k in self.d_stims]
+		otherkeys = [k for k in other.d_stims]
+		common_keys = np.intersect1d(selfkeys, otherkeys)
+
+		for sound in common_keys:
+			for p in range(n_pres):
+				self.d_stims[sound][p] += other.d_stims[sound][p]
+
+		return self
 
 	def __load_data(self):
 		# Load files from KS directory
@@ -135,6 +147,22 @@ class Recording():
 
 		return pop_vectors
 
+	def get_timings_vectors(self, pad_before, pad_after):
+		time_vectors = {}
+		bins = list(np.arange(pad_before, pad_after + 10, 10))
+		for stim in self.d_stims:
+			time_vectors[stim] = {}
+			for pres in self.d_stims[stim]:
+				time_vector = np.sort([s for clu in self.d_stims[stim][pres] for s in clu])
+				time_vector = time_vector[time_vector > - pad_before]
+				time_vector = time_vector[time_vector < pad_after]
+				time = np.histogram(time_vector, bins)[0]
+
+				time_vectors[stim][pres] = time
+
+		return time_vectors
+
+
 
 
 
@@ -145,7 +173,6 @@ class Recording():
 
 '''
 Extend tasks to tasks 3 and 4
-Have a function that takes time into account and average across timebins only
 Concatenate across dimensions to get large array
 Make proper figures from it (svm performance model, save for each task
 make an __add__ method to merge two recording together
