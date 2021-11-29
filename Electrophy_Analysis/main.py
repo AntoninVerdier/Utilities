@@ -1,8 +1,10 @@
 import os
+import umap
 import scipy.io as sio
 import numpy as np
 import h5py
 
+import matplotlib
 from rich import print
 from rich.progress import track
 import matplotlib.pyplot as plt
@@ -11,6 +13,9 @@ import seaborn as sns
 
 from sklearn import svm
 from sklearn.model_selection import train_test_split, cross_val_score, LeaveOneOut
+from sklearn.manifold import TSNE
+from sklearn.decomposition import PCA
+
 
 
 import settings as s
@@ -19,27 +24,6 @@ from Recording import Recording
 paths = s.paths()
 params = s.params()
 
-
-recs = []
-for folder in os.listdir('/home/user/Documents/Antonin/DataEphys/To_analyze'):
-	cp = os.path.join('/home/user/Documents/Antonin/DataEphys/To_analyze', folder)
-	print('Analyzing {} ...'.format(folder))
-	rec = Recording(cp, os.path.join(cp, 'SoundInfo.mat'), name=folder)
-	rec.select_data_quality(quality='good')
-	rec.ttl_alignment(multi=False)
-	recs.append(rec)
-
-total_rec = np.sum(recs)
-total_rec.get_population_vectors(0, 500)
-
-rec = Recording(paths.Ksdir, paths.SoundInfo, name='testing')
-rec.select_data_quality(quality='good')
-rec.ttl_alignment(multi=False)
-rec.get_timings_vectors(0, 500)
-
-
-
-
 def compute_svm(X, y):
 	clf = svm.SVC()
 	########## Need to make sure that data is shuffled
@@ -47,30 +31,121 @@ def compute_svm(X, y):
 	return scores
 
 def svm_preformance(rec):
-	for i, t in enumerate([params.task1, params.task2]):
+	for i, t in enumerate([params.task1, params.task2, params.task3, params.task4]):
 		scores = []
 		for p in track(np.arange(50, 1000, 50), description='Compute SVM for each task ...'):
-			pop_vectors = rec.get_timings_vectors(0, p)
+			pop_vectors = rec.get_population_vectors(0, p)
 
 			X = np.array([pop_vectors[stim][p] for stim in t for p in pop_vectors[stim]])
 			if i < 2:
 				y = np.array([0 if i < 8 else 1 for i, stim in enumerate(t) for p in pop_vectors[stim]])
+			elif i == 2:
+				y = params.y_task3
+			elif i == 3:
+				y = params.y_task4
 
 			score = compute_svm(X, y)
 			scores.append([np.mean(score), np.std(score)])
 
 		scores = np.array(scores).reshape(-1, 2)
 
-		plt.errorbar(np.arange(0.05, 1, 0.05), scores[:, 0], label='Task {}'.format(1 if not i else 2))
+		plt.errorbar(np.arange(50, 1000, 50), scores[:, 0], label='Task {}'.format(i + 1))
 
 	plt.legend()
-	plt.savefig('performance_svm.png')
+	plt.savefig('performance_svm_timings.png')
 	plt.show()
 
+recs = []
+for folder in os.listdir('/home/user/Documents/Antonin/DataEphys/To_analyze'):
+	cp = os.path.join('/home/user/Documents/Antonin/DataEphys/To_analyze', folder)
+	print('Analyzing {} ...'.format(folder))
+	rec = Recording(cp, os.path.join(cp, 'SoundInfo.mat'), name=folder)	
+	rec.select_data_quality(quality='good')
+	rec.ttl_alignment(multi=False)
+	recs.append(rec)
+
+
+rec = np.sum(recs)
 svm_preformance(rec)
 
+
+pop_vectors = rec.get_population_vectors(0, 500)
+
+colors = []
+for stim in [s for s in np.unique(rec.s_vector) for p in pop_vectors[s]]:
+	if stim in params.task1:
+		colors.append(0)
+	elif stim in params.task2:
+		colors.append(1)
+	elif stim in params.task3:
+		colors.append(2)
+	elif stim in params.task4:
+		colors.append(3)
+	else:
+		colors.append(4)
+
+# stims = [s for s in np.unique(rec.s_vector) for p in pop_vectors[s]]
+# colors, values = [], []
+# for stim in stims:
+# 	if stim in params.task1:
+# 		cmap = matplotlib.cm.get_cmap('Blues')
+# 		value = np.where(stim == params.task1)[0][0]/len(params.task1)
+# 	elif stim in params.task2:
+# 		cmap = matplotlib.cm.get_cmap('Reds')
+# 		value = np.where(stim == params.task2)[0][0]/len(params.task2)
+# 	elif stim in params.task3:
+# 		cmap = matplotlib.cm.get_cmap('Greens')
+# 		value = np.where(stim == params.task3)[0][0]/len(params.task3)
+# 	elif stim in params.task4:
+# 		cmap = matplotlib.cm.get_cmap('Greys')
+# 		value = np.where(stim == params.task4)[0][0]/len(params.task4)
+# 	else:
+# 		value = (1, 1, 1, 1)
+
+# 	colors.append(cmap(value))
+# 	print(len(colors))
+
+
+for time in track(range(50, 1050, 50)):
+	pop_vectors = rec.get_timings_vectors(0, time)
+	X = np.array([pop_vectors[stim][p] for stim in np.unique(rec.s_vector) for p in pop_vectors[stim]])
+
+	tsne = TSNE(n_components=2)
+	Y = tsne.fit_transform(X)
+
+	plt.scatter(Y[:, 0], Y[:, 1], c=colors)
+
+
+	plt.savefig('tsne_time_{}.png'.format(time))
+	plt.close()
+
+X = np.array([pop_vectors[stim][p] for stim in np.unique(rec.s_vector) for p in pop_vectors[stim]])
+
+umap = umap.UMAP(n_neighbors=5)
+Y = umap.fit_transform(X)
+
+print(X.shape, Y.shape)
+plt.scatter(Y[green, 0], Y[green, 1], c="g")
+plt.scatter(Y[red, 0], Y[red, 1], c="r")
+plt.scatter(Y[blue, 0], Y[blue, 1], c="b")
+plt.scatter(Y[yellow, 0], Y[yellow, 1], c="y")
+plt.scatter(Y[gray, 0], Y[gray, 1], c="gray")
+
+
+
+plt.show()
+plt.close()
+
+# total_rec.get_population_vectors(0, 500)
+
+# rec = Recording(paths.Ksdir, paths.SoundInfo, name='testing')
+# rec.select_data_quality(quality='good')
+# rec.ttl_alignment(multi=False)
+
+
+
+
 # Still need to drax psycoM curves
-Q
 	
 		
 

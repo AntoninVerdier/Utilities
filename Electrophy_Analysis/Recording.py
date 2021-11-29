@@ -9,6 +9,8 @@ import settings as s
 
 from rich.progress import track
 
+import matplotlib.pyplot as plt
+
 params = s.params()
 class Recording():
 	"""docstring for Recording"""
@@ -94,7 +96,7 @@ class Recording():
 		self.n_clu = len(self.idxs_clu)
 
 
-	def __ttl_alignment_single_cpu(self, pad_before=params.pad_before, pad_after=params.pad_after):
+	def __ttl_alignment_single_cpu(self, pad_before, pad_after):
 		if not self.idxs_clu:
 			self.__get_idxs_clu()
 
@@ -104,7 +106,7 @@ class Recording():
 			stim_ttls = self.ttl_idxs[np.where(self.s_vector == stim)[0]]
 			self.d_stims[stim] = {}
 			for i, ttl in enumerate(stim_ttls):
-				spikes = self.sp_times[self.sp_times > ttl - pad_before]
+				spikes = self.sp_times[self.sp_times > ttl + pad_before]
 				spikes = np.array(spikes[spikes < ttl + pad_after], dtype=np.int64)
 
 				self.d_stims[stim][i] = [(np.intersect1d(self.sp_times[idx_clu], spikes) - ttl)*1000/params.fs for idx_clu in self.idxs_clu]
@@ -118,14 +120,13 @@ class Recording():
 		stim_ttls = self.ttl_idxs[np.where(self.s_vector == args[0])[0]]
 		self.d_stims[args[0]] = {}
 		for i, ttl in enumerate(stim_ttls):
-			spikes = self.sp_times[self.sp_times > ttl - args[1]]
+			spikes = self.sp_times[self.sp_times > ttl + args[1]]
 			spikes = np.array(spikes[spikes < ttl + args[2]], dtype=np.int64)
-			print(self.d_stims[args[0]][i])
 			self.d_stims[args[0]][i] = [(np.intersect1d(self.sp_times[idx_clu], spikes) - ttl)*1000/params.fs for idx_clu in self.idxs_clu]
 
-	def ttl_alignment(self, pad_before=params.pad_before, pad_after=params.pad_after, multi=True):
-		if os.path.isfile('{}_aligned_spikes.pkl'.format(self.name)):
-			self.d_stims = pkl.load(open('{}_aligned_spikes.pkl'.format(self.name), 'rb'))
+	def ttl_alignment(self, pad_before=0, pad_after=20000, multi=True):
+		if os.path.isfile(os.path.join(self.output, '{}_aligned_spikes.pkl'.format(self.name))):
+			self.d_stims = pkl.load(open(os.path.join(self.output, '{}_aligned_spikes.pkl'.format(self.name)), 'rb'))
 		else:
 			self.d_stims = {}
 			if multi:
@@ -145,10 +146,12 @@ class Recording():
 			for pres in self.d_stims[stim]:
 				pop_vector = []
 				for i, clu in enumerate(self.d_stims[stim][pres]):
-					sp = clu[clu > - pad_before]
+					sp = clu[clu > pad_before]
 					sp = np.array(sp[sp < pad_after], dtype=np.int64)
 					pop_vector.append(sp.shape[0])
 				pop_vectors[stim][pres] = pop_vector
+
+		self.pop_vectors = pop_vectors
 
 		return pop_vectors
 
@@ -160,12 +163,63 @@ class Recording():
 			for pres in self.d_stims[stim]:
 				time_vector = np.sort([s for clu in self.d_stims[stim][pres] for s in clu])
 				time_vector = time_vector[time_vector > - pad_before]
-				time_vector = time_vector[time_vector < pad_after]
+				time_vector = np.array(time_vector[time_vector < pad_after], dtype=np.int64)
 				time = np.histogram(time_vector, bins)[0]
 
 				time_vectors[stim][pres] = time
 
+		self.time_vectors = time_vectors
+
 		return time_vectors
+
+	def complete_vectors(self, pad_before, pad_after):
+		pop_vectors = {}
+		for stim in self.d_stims:
+			pop_vectors[stim] = {}
+			for pres in self.d_stims[stim]:
+				pop_vector = []
+				for i, clu in enumerate(self.d_stims[stim][pres]):
+					clu = clu[clu > - pad_before]
+					clu = np.array(clu[clu < pad_after], dtype=np.int64)
+					pop_vector.append(clu) 
+				pop_vectors[stim][pres] = np.array([v for vec in pop_vector for v in vec])
+
+		self.pop_vectors = pop_vectors
+
+		return pop_vectors
+	def __compute_svm():
+		clf = svm.SVC()
+		########## Need to make sure that data is shuffled
+		scores = cross_val_score(clf, X, y, cv=5)
+		return scores
+
+	def svm_preformance(rec, task=params.task1, scale=np.arange(50, 1000, 50)):
+		"""define all y_task
+		"""
+		scores = []
+		for p in track(scale, description='Compute SVM ...'):
+			pop_vectors = rec.get_population_vectors(0, p)
+
+			X = np.array([pop_vectors[stim][p] for stim in task for p in pop_vectors[stim]])
+			
+			if i < 2:
+				y = np.array([0 if i < 8 else 1 for i, stim in enumerate(task) for p in pop_vectors[stim]])
+			elif i == 2:
+				y = params.y_task3
+			elif i == 3:
+				y = params.y_task4
+
+			score = compute_svm(X, y)
+			scores.append([np.mean(score), np.std(score)])
+
+		scores = np.array(scores).reshape(-1, 2)
+
+		plt.errorbar(np.arange(50, 1000, 10), scores[:, 0], label='Task {}'.format(i + 1))
+
+		plt.legend()
+		plt.savefig('performance_svm_timings.png')
+		plt.show()
+
 
 
 
