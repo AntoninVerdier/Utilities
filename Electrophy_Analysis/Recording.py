@@ -187,7 +187,7 @@ class Recording():
 		self.pop_vectors = pop_vectors
 
 		return pop_vectors
-	def __compute_svm():
+	def __compute_svm(kernel='linear'):
 		clf = svm.SVC()
 		########## Need to make sure that data is shuffled
 		scores = cross_val_score(clf, X, y, cv=5)
@@ -214,13 +214,27 @@ class Recording():
 
 		scores = np.array(scores).reshape(-1, 2)
 
-		plt.errorbar(np.arange(50, 1000, 10), scores[:, 0], label='Task {}'.format(i + 1))
+		plt.errorbar(scale, scores[:, 0], label='Task {}'.format(i + 1))
 
 		plt.legend()
 		plt.savefig('performance_svm_timings.png')
 		plt.show()
 
+	def raster_plot(self):
+		activity = {}
+		bins = np.arange(0, 1000, 10)
+		for stim in self.d_stims:
+			activity[stim] = [np.sort(np.concatenate([self.d_stims[stim][pres][i] for pres in self.d_stims[stim]])) for i in range(len(self.d_stims[stim][0]))]
 
+		for stim in activity:
+			raster = [np.histogram(clu, bins)[0] for clu in activity[stim]]
+			plt.imshow(raster)
+			plt.savefig('Output/Raster/raster_{}.png'.format(params.sound_names[stim]))
+			plt.close()
+
+		self.activity = activity
+
+		return activity
 
 
 

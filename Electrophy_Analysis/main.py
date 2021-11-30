@@ -25,7 +25,7 @@ paths = s.paths()
 params = s.params()
 
 def compute_svm(X, y):
-	clf = svm.SVC()
+	clf = svm.SVC(kernel='linear')
 	########## Need to make sure that data is shuffled
 	scores = cross_val_score(clf, X, y, cv=5)
 	return scores
@@ -33,7 +33,7 @@ def compute_svm(X, y):
 def svm_preformance(rec):
 	for i, t in enumerate([params.task1, params.task2, params.task3, params.task4]):
 		scores = []
-		for p in track(np.arange(50, 1000, 50), description='Compute SVM for each task ...'):
+		for p in track(np.arange(0, 1000, 50), description='Compute SVM for each task ...'):
 			pop_vectors = rec.get_population_vectors(0, p)
 
 			X = np.array([pop_vectors[stim][p] for stim in t for p in pop_vectors[stim]])
@@ -49,10 +49,10 @@ def svm_preformance(rec):
 
 		scores = np.array(scores).reshape(-1, 2)
 
-		plt.errorbar(np.arange(50, 1000, 50), scores[:, 0], label='Task {}'.format(i + 1))
+		plt.errorbar(np.arange(0, 1000, 50), scores[:, 0], label='Task {}'.format(i + 1))
 
 	plt.legend()
-	plt.savefig('performance_svm_timings.png')
+	plt.savefig('performance_svm_population.png')
 	plt.show()
 
 recs = []
@@ -66,23 +66,27 @@ for folder in os.listdir('/home/user/Documents/Antonin/DataEphys/To_analyze'):
 
 
 rec = np.sum(recs)
+#rec.raster_plot()
 svm_preformance(rec)
 
 
-pop_vectors = rec.get_population_vectors(0, 500)
+pop_vectors = rec.get_population_vectors(0, 1000)
 
+cmap = matplotlib.cm.get_cmap('hsv')
 colors = []
 for stim in [s for s in np.unique(rec.s_vector) for p in pop_vectors[s]]:
 	if stim in params.task1:
-		colors.append(0)
+		colors.append(cmap(0.1)) # Orange
 	elif stim in params.task2:
-		colors.append(1)
-	elif stim in params.task3:
-		colors.append(2)
+		colors.append(cmap(0.3)) # vert
+	elif stim in params.task3: 
+		colors.append(cmap(0.5)) # Blue
 	elif stim in params.task4:
-		colors.append(3)
+		colors.append(cmap(0.7))  #ble dark
 	else:
-		colors.append(4)
+		colors.append(cmap(0.9)) # Pink
+
+
 
 # stims = [s for s in np.unique(rec.s_vector) for p in pop_vectors[s]]
 # colors, values = [], []
@@ -107,7 +111,7 @@ for stim in [s for s in np.unique(rec.s_vector) for p in pop_vectors[s]]:
 
 
 for time in track(range(50, 1050, 50)):
-	pop_vectors = rec.get_timings_vectors(0, time)
+	pop_vectors = rec.get_population_vectors(0, time)
 	X = np.array([pop_vectors[stim][p] for stim in np.unique(rec.s_vector) for p in pop_vectors[stim]])
 
 	tsne = TSNE(n_components=2)
@@ -116,7 +120,7 @@ for time in track(range(50, 1050, 50)):
 	plt.scatter(Y[:, 0], Y[:, 1], c=colors)
 
 
-	plt.savefig('tsne_time_{}.png'.format(time))
+	plt.savefig('Output/TSNE/tsne_time_{}.png'.format(time))
 	plt.close()
 
 X = np.array([pop_vectors[stim][p] for stim in np.unique(rec.s_vector) for p in pop_vectors[stim]])

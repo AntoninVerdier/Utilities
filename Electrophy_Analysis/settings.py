@@ -25,31 +25,32 @@ class params():
 		self.y_task3 = [0]*3*4*15 + [1]*3*4*15
 		self.y_task4 = [0]*15 + [1]*5*15
 
-		self.sound_names = ['10kHz_126Hz_45dB.wav' '10kHz_126Hz_50dB.wav' '10kHz_126Hz_55dB.wav'
-							'10kHz_126Hz_60dB.wav' '10kHz_200Hz_45dB.wav' '10kHz_200Hz_50dB.wav'
-							'10kHz_200Hz_55dB.wav' '10kHz_200Hz_60dB.wav' '10kHz_20Hz_45dB.wav'
-							'10kHz_20Hz_50dB.wav' '10kHz_20Hz_55dB.wav' '10kHz_20Hz_60dB.wav'
-							'10kHz_31Hz_45dB.wav' '10kHz_31Hz_50dB.wav' '10kHz_31Hz_55dB.wav'
-							'10kHz_31Hz_60dB.wav' '10kHz_50Hz_45dB.wav' '10kHz_50Hz_50dB.wav'
-							'10kHz_50Hz_55dB.wav' '10kHz_50Hz_60dB.wav' '10kHz_79Hz_45dB.wav'
-							'10kHz_79Hz_50dB.wav' '10kHz_79Hz_55dB.wav' '10kHz_79Hz_60dB.wav'
-							'500ms_6kHz.wav' '6kto16k_10step_70dB.wav' '6kto16k_2step_70dB.wav'
-							'6kto16k_4step_70dB.wav' '6kto16k_6step_70dB.wav' '6kto16k_70dB.wav'
-							'6kto16k_8step_70dB.wav' 'PT_10123Hz_500ms_70dB.wav'
-							'PT_10807Hz_500ms_70dB.wav' 'PT_108Hz_500ms_70dB.wav'
-							'PT_11537Hz_500ms_70dB.wav' 'PT_12317Hz_500ms_70dB.wav'
-							'PT_126Hz_500ms_70dB.wav' 'PT_13150Hz_500ms_70dB.wav'
-							'PT_14038Hz_500ms_70dB.wav' 'PT_147Hz_500ms_70dB.wav'
-							'PT_14987Hz_500ms_70dB.wav' 'PT_16000Hz_500ms_70dB.wav'
-							'PT_171Hz_500ms_70dB.wav' 'PT_200Hz_500ms_70dB.wav'
-							'PT_20Hz_500ms_70dB.wav' 'PT_23Hz_500ms_70dB.wav'
-							'PT_27Hz_500ms_70dB.wav' 'PT_31Hz_500ms_70dB.wav'
-							'PT_36Hz_500ms_70dB.wav' 'PT_43Hz_500ms_70dB.wav'
-							'PT_50Hz_500ms_70dB.wav' 'PT_58Hz_500ms_70dB.wav'
-							'PT_6000Hz_500ms_70dB.wav' 'PT_6405Hz_500ms_70dB.wav'
-							'PT_6838Hz_500ms_70dB.wav' 'PT_68Hz_500ms_70dB.wav'
-							'PT_7300Hz_500ms_70dB.wav' 'PT_7793Hz_500ms_70dB.wav'
-							'PT_79Hz_500ms_70dB.wav' 'PT_8320Hz_500ms_70dB.wav'
-							'PT_8882Hz_500ms_70dB.wav' 'PT_92Hz_500ms_70dB.wav'
+		self.sound_names = ['10kHz_126Hz_45dB.wav', '10kHz_126Hz_50dB.wav', '10kHz_126Hz_55dB.wav',
+							'10kHz_126Hz_60dB.wav', '10kHz_200Hz_45dB.wav', '10kHz_200Hz_50dB.wav',
+							'10kHz_200Hz_55dB.wav', '10kHz_200Hz_60dB.wav', '10kHz_20Hz_45dB.wav',
+							'10kHz_20Hz_50dB.wav', '10kHz_20Hz_55dB.wav', '10kHz_20Hz_60dB.wav',
+							'10kHz_31Hz_45dB.wav', '10kHz_31Hz_50dB.wav', '10kHz_31Hz_55dB.wav',
+							'10kHz_31Hz_60dB.wav', '10kHz_50Hz_45dB.wav', '10kHz_50Hz_50dB.wav',
+							'10kHz_50Hz_55dB.wav', '10kHz_50Hz_60dB.wav', '10kHz_79Hz_45dB.wav',
+							'10kHz_79Hz_50dB.wav', '10kHz_79Hz_55dB.wav', '10kHz_79Hz_60dB.wav',
+							'500ms_6kHz.wav', '6kto16k_10step_70dB.wav', '6kto16k_2step_70dB.wav',
+							'6kto16k_4step_70dB.wav', '6kto16k_6step_70dB.wav', '6kto16k_70dB.wav',
+							'6kto16k_8step_70dB.wav', 'PT_10123Hz_500ms_70dB.wav',
+							'PT_10807Hz_500ms_70dB.wav', 'PT_108Hz_500ms_70dB.wav',
+							'PT_11537Hz_500ms_70dB.wav', 'PT_12317Hz_500ms_70dB.wav',
+							'PT_126Hz_500ms_70dB.wav', 'PT_13150Hz_500ms_70dB.wav',
+							'PT_14038Hz_500ms_70dB.wav', 'PT_147Hz_500ms_70dB.wav',
+							'PT_14987Hz_500ms_70dB.wav', 'PT_16000Hz_500ms_70dB.wav',
+							'PT_171Hz_500ms_70dB.wav', 'PT_200Hz_500ms_70dB.wav',
+							'PT_20Hz_500ms_70dB.wav', 'PT_23Hz_500ms_70dB.wav',
+							'PT_27Hz_500ms_70dB.wav', 'PT_31Hz_500ms_70dB.wav',
+							'PT_36Hz_500ms_70dB.wav', 'PT_43Hz_500ms_70dB.wav',
+							'PT_50Hz_500ms_70dB.wav', 'PT_58Hz_500ms_70dB.wav',
+							'PT_6000Hz_500ms_70dB.wav', 'PT_6405Hz_500ms_70dB.wav',
+							'PT_6838Hz_500ms_70dB.wav', 'PT_68Hz_500ms_70dB.wav',
+							'PT_7300Hz_500ms_70dB.wav', 'PT_7793Hz_500ms_70dB.wav',
+							'PT_79Hz_500ms_70dB.wav', 'PT_8320Hz_500ms_70dB.wav',
+							'PT_8882Hz_500ms_70dB.wav', 'PT_92Hz_500ms_70dB.wav',
 							'PT_9482Hz_500ms_70dB.wav']
 		self.colors_1 = []
+
