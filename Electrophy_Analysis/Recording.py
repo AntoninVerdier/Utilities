@@ -173,6 +173,7 @@ class Recording():
 		return time_vectors
 
 	def complete_vectors(self, pad_before, pad_after):
+		bins = np.arange(0, 1000, 10)
 		pop_vectors = {}
 		for stim in self.d_stims:
 			pop_vectors[stim] = {}
@@ -181,8 +182,8 @@ class Recording():
 				for i, clu in enumerate(self.d_stims[stim][pres]):
 					clu = clu[clu > - pad_before]
 					clu = np.array(clu[clu < pad_after], dtype=np.int64)
-					pop_vector.append(clu) 
-				pop_vectors[stim][pres] = np.array([v for vec in pop_vector for v in vec])
+					pop_vector.append(np.histogram(clu, bins)) 
+				pop_vectors[stim][pres] = np.array(np.flatten(pop_vector))
 
 		self.pop_vectors = pop_vectors
 

@@ -34,7 +34,7 @@ def svm_preformance(rec):
 	for i, t in enumerate([params.task1, params.task2, params.task3, params.task4]):
 		scores = []
 		for p in track(np.arange(0, 1000, 50), description='Compute SVM for each task ...'):
-			pop_vectors = rec.get_population_vectors(0, p)
+			pop_vectors = rec.complete_vectors(0, p)
 
 			X = np.array([pop_vectors[stim][p] for stim in t for p in pop_vectors[stim]])
 			if i < 2:
