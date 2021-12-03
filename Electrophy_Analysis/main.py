@@ -12,9 +12,10 @@ import pandas as pd
 import seaborn as sns
 
 from sklearn import svm
-from sklearn.model_selection import train_test_split, cross_val_score, LeaveOneOut
+from sklearn.model_selection import train_test_split, cross_val_score, LeaveOneOut, RepeatedKFold
 from sklearn.manifold import TSNE
 from sklearn.decomposition import PCA
+from sklearn.metrics import confusion_matrix
 
 
 
@@ -25,10 +26,23 @@ paths = s.paths()
 params = s.params()
 
 def compute_svm(X, y):
-	clf = svm.SVC(kernel='linear')
+	kf = RepeatedKFold(n_splits=5, n_repeats=5) 
+
+	for train_index, test_index in kf.split(X):
+		X_train, X_test = X[train_index], X[test_index] 
+		y_train, y_test = y[train_index], y[test_index]
+	
+		clf = svm.SVC(kernel='linear')
+		clf.fit(X_train, y_train)
+		score = clf.score(X_test, y_test)
+		y_pred = clf.predict(X_test)
+		cmat = confusion_matrix(y_test, y_pred)
+		cmat = cmat.diagonal()/cmat.sum(axis=1)
+		print(cmat)
+
 	########## Need to make sure that data is shuffled
-	scores = cross_val_score(clf, X, y, cv=5)
-	return scores
+	#scores = cross_val_score(clf, X, y, cv=5)
+	return score
 
 def svm_preformance(rec):
 	for i, t in enumerate([params.task1, params.task2, params.task3, params.task4]):
@@ -55,6 +69,30 @@ def svm_preformance(rec):
 	plt.savefig('performance_svm_population.png')
 	plt.show()
 
+def psychocurve(rec):
+	for i, t in enumerate([params.task1]):
+		scores = []
+		for p in track(np.arange(0, 1000, 50), description='Compute SVM for each task ...'):
+			pop_vectors = rec.get_population_vectors(0, p)
+
+			X = np.array([pop_vectors[stim][p] for stim in t for p in pop_vectors[stim]])
+			y = np.array([i for i, stim in enumerate(t) for p in pop_vectors[stim]])
+
+			score = compute_svm(X, y)
+			print(score)
+			scores.append([np.mean(score), np.std(score)])
+
+		scores = np.array(scores).reshape(-1, 2)
+
+		plt.errorbar(np.arange(0, 1000, 50), scores[:, 0], label='Task {}'.format(i + 1))
+
+	plt.legend()
+	plt.savefig('performance_svm_population.png')
+	plt.show()
+
+
+
+
 recs = []
 for folder in os.listdir('/home/user/Documents/Antonin/DataEphys/To_analyze'):
 	cp = os.path.join('/home/user/Documents/Antonin/DataEphys/To_analyze', folder)
@@ -67,7 +105,8 @@ for folder in os.listdir('/home/user/Documents/Antonin/DataEphys/To_analyze'):
 
 rec = np.sum(recs)
 #rec.raster_plot()
-svm_preformance(rec)
+
+psychocurve(rec)
 
 
 pop_vectors = rec.get_population_vectors(0, 1000)

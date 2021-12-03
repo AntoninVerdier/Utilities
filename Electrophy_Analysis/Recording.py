@@ -183,7 +183,7 @@ class Recording():
 					clu = clu[clu > - pad_before]
 					clu = np.array(clu[clu < pad_after], dtype=np.int64)
 					pop_vector.append(np.histogram(clu, bins)) 
-				pop_vectors[stim][pres] = np.array(np.flatten(pop_vector))
+				pop_vectors[stim][pres] = np.array(pop_vector.flatten())
 
 		self.pop_vectors = pop_vectors
 
