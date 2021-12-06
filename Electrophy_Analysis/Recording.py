@@ -182,8 +182,8 @@ class Recording():
 				for i, clu in enumerate(self.d_stims[stim][pres]):
 					clu = clu[clu > - pad_before]
 					clu = np.array(clu[clu < pad_after], dtype=np.int64)
-					pop_vector.append(np.histogram(clu, bins)) 
-				pop_vectors[stim][pres] = np.array(pop_vector.flatten())
+					pop_vector.append(np.histogram(clu, bins)[0])
+				pop_vectors[stim][pres] = np.array(np.array(pop_vector).flatten())
 
 		self.pop_vectors = pop_vectors
 
