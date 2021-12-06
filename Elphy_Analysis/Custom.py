@@ -81,7 +81,7 @@ class Mouse(object):
         """ Retrieve behavioural etadat from Google Sheet"""
         SAMPLE_SPREADSHEET_ID_input = '1PNvkKMTGbVxGGG-2eyWFEtG9dcv3ZVb9m9zVixjRlfc'
         if collab: SAMPLE_SPREADSHEET_ID_input = '1utsDBiSvcNIuYyOS4LiIG0wRCn7fdxf7-EbAjwbXntE'
-        SAMPLE_RANGE_NAME = 'A1:AK1000'
+        SAMPLE_RANGE_NAME = 'A1:BA1000'
 
         creds = self.__google_credentials()
         service = build('sheets', 'v4', credentials=creds)
@@ -537,7 +537,7 @@ class Mouse(object):
 
     class File(object):
         """DAT file as an object for better further use"""
-        def __init__(self, path, rmgaps=False):
+        def __init__(self, path, rmgaps=True):
             self.path = path
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
@@ -595,14 +595,14 @@ class Mouse(object):
 
             return ttype, licks, corr
 
-# mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/660268', tag=['PCAM'], collab=False)
-# mouse.psychoacoustic(tag=['PCAM'], stim_freqs=np.geomspace(20, 200, 16), plot=True, threshold=50)
+# mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/741151', tag=['PC'], collab=False)
+# mouse.psychoacoustic(tag=['PC'], stim_freqs=np.geomspace(4e3, 16e3, 16), plot=True, threshold=70)
 #mouse.get_session_info('04032021')
 #mouse.correct_graph('02022021')
 # for m in batch.id_first_collab:
 #     mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/{}/'.format(m), tag=['OPTO'], date='01062021', collab=True)
 #     mouse.score_by_task()#names=['Blank_NOL', '50ms_NOL', '150ms_NOL', 'Blank_L', '50ms_L', '150ms_L'])
-# mouse.weight(plot=True)
+#mouse.weight(plot=True)
 #mouse.summary(tag=['DISAM'], show=True, stim_freqs=[1, 2, 3], threshold=0)
 
 # make a function to find specific files for one mouse and be able to call it
