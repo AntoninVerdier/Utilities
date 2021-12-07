@@ -70,7 +70,7 @@ def svm_preformance(rec):
     plt.show()
 
 def psychocurve(rec):
-    for i, t in enumerate([params.task1]):
+    for i, t in enumerate([params.task1, params.task2]):
         pop_vectors = rec.complete_vectors(0, 1000)
 
         X = np.array([pop_vectors[stim][p] for stim in t for p in pop_vectors[stim]])
@@ -79,7 +79,7 @@ def psychocurve(rec):
 
         #X, y, true_classes = shuffle(X, y, true_classes)
         psycos = []
-        for train_index, test_index in RepeatedKFold(n_splits=3, n_repeats=5).split(X):
+        for train_index, test_index in RepeatedKFold(n_splits=3, n_repeats=20).split(X):
             clf = svm.SVC(kernel='linear')
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
@@ -89,12 +89,19 @@ def psychocurve(rec):
             y_pred = clf.predict(X_test)
             correct = np.logical_not(np.logical_xor(y_pred, y_test))
             counting_vec = list(correct * tc_test)
-            psycos.append([counting_vec.count(i)/list(tc_test).count(i) if i < 9 else 1 - counting_vec.count(i)/list(tc_test).count(i)  for i in np.unique(true_classes)])
 
-        psycos = np.array(psycos)
+            for i in np.unique(true_classes):
+                try:
+                    if i < 9:
+                        psycos.append(counting_vec.count(i)/list(tc_test).count(i))
+                    else:
+                        psycos.append(1 - counting_vec.count(i)/list(tc_test).count(i))
+                except ZeroDivisionError:
+                    psycos.append(0)
+
+        psycos = np.array(psycos).reshape(60, 16)
         psycos = np.mean(psycos, axis=0)
-        print(psycos.shape)
-        plt.plot(np.arange(1, 17), psycos)
+        plt.plot(np.geomspace(6e3, 16e3, 16), psycos)
         plt.show()
 
 
