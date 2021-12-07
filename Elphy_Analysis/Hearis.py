@@ -175,7 +175,7 @@ def all_perfs(mice, plot=False):
     fig.suptitle('Perfs\' follow up - AVEC GAP REMOVAL')
 
     for i, mouse in enumerate(mice):
-        corr, d, _ = mouse.perf(plot=plot)
+        corr, d = mouse.perf(plot=plot)
 
         axs[i%4, i//4].yaxis.grid(c='gainsboro', ls='--')
         axs[i%4, i//4].plot(d, corr, 'o-')
@@ -195,7 +195,7 @@ def all_perfs_once(mice):
 
     all_d = []
     for i, mouse in enumerate(mice):
-        corr, d, t = mouse.perf(rmcons=True)
+        corr, d = mouse.perf(rmcons=True)
         all_d += list(d)
     all_d = np.sort(list(set(all_d)))
 
@@ -205,7 +205,7 @@ def all_perfs_once(mice):
 
     data_to_save = []
     for i, mouse in enumerate(mice):
-        corr, d, t = mouse.perf(rmcons=True)
+        corr, d = mouse.perf(rmcons=True)
         dates.append(d)
         corrs.append(corr)
         tags.append(t)
@@ -468,32 +468,35 @@ def histogram_slopes_PC(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), 
 # all_perfs(mice)
 
 # Collab perf
-mice_id = batch.id_first_batch
-mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['DISAM'], collab=False, rmgaps=False) for i in mice_id]
-for mouse in mice:
-    files = mouse.elphy
-    files = [f for f in files]
-    tasks = np.array([item for f in files for item in f.tr_type])
-    corr = np.array([item for f in files for item in f.tr_corr])
-    types = np.array([item for f in files for item in f.tr_corr])
-    licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
-    #licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
+mice_id = batch.id_third_batch
+mice = [Mouse(path='/home/user/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['PC'], collab=False, rmgaps=False) for i in mice_id]
+all_weights(mice)
+all_perfs(mice)
+all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(4e3, 16e3, 16), threshold=50)
+# for mouse in mice:p
+#     files = mouse.elphy
+#     files = [f for f in files]
+#     tasks = np.array([item for f in files for item in f.tr_type])
+#     corr = np.array([item for f in files for item in f.tr_corr])
+#     types = np.array([item for f in files for item in f.tr_corr])
+#     licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
+#     #licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
 
     
-    w = 50
-    tasks = [4 if t == 1 else t for t in tasks ]
-    tasks = [1 if t == 3 else t for t in tasks ]
-    rewards = [0 if t == 2 else t for t in tasks]
+#     w = 50
+#     tasks = [4 if t == 1 else t for t in tasks ]
+#     tasks = [1 if t == 3 else t for t in tasks ]
+#     rewards = [0 if t == 2 else t for t in tasks]
 
 
-    rewarded_trials = np.convolve([c for i, c in enumerate(corr) if rewards[i] == 1], np.ones(w))
-    non_rewarded_trials = np.convolve([c for i, c in enumerate(corr) if rewards[i] == 0], np.ones(w))
-    blank_trials = np.convolve([c for i, c in enumerate(corr) if rewards[i] == 4], np.ones(w))
+#     rewarded_trials = np.convolve([c for i, c in enumerate(corr) if rewards[i] == 1], np.ones(w))
+#     non_rewarded_trials = np.convolve([c for i, c in enumerate(corr) if rewards[i] == 0], np.ones(w))
+#     blank_trials = np.convolve([c for i, c in enumerate(corr) if rewards[i] == 4], np.ones(w))
     
-    plt.plot(rewarded_trials, c='blue')
-    plt.plot(non_rewarded_trials, c='red')
-    plt.plot(blank_trials, c='green')
-    plt.show()
+#     plt.plot(rewarded_trials, c='blue')
+#     plt.plot(non_rewarded_trials, c='red')
+#     plt.plot(blank_trials, c='green')
+#     plt.show()
 # pkl.dump(mice, open('Panel_D_mice.pkl', 'wb'))
 # data_to_save = mean_psycoacoustic(mice, 'PC', stim_freqs=np.geomspace(20, 200, 16), threshold=65)
 # pkl.dump(data_to_save, open('Panel_D_data.pkl', 'wb'))
