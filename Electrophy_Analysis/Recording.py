@@ -33,7 +33,7 @@ class Recording():
 
 		for sound in common_keys:
 			for p in range(n_pres):
-				self.d_stims[sound][p] += other.d_stims[sound][p]
+				self.d_stims[sound][p] += other.d_stims[sound][p] # WTF are you doing you shou_ld be addingf presentatiuons
 
 		return self
 
