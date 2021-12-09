@@ -172,8 +172,8 @@ class Recording():
 
 		return time_vectors
 
-	def complete_vectors(self, pad_before, pad_after):
-		bins = np.arange(0, 1000, 10)
+	def complete_vectors(self, pad_before, pad_after, timebin):
+		bins = np.arange(0, 1000, timebin)
 		pop_vectors = {}
 		for stim in self.d_stims:
 			pop_vectors[stim] = {}
@@ -183,7 +183,7 @@ class Recording():
 					clu = clu[clu > - pad_before]
 					clu = np.array(clu[clu < pad_after], dtype=np.int64)
 					pop_vector.append(np.histogram(clu, bins)[0])
-				pop_vectors[stim][pres] = np.array(np.array(pop_vector).flatten())
+				pop_vectors[stim][pres] = np.array(pop_vector).flatten()
 
 		self.pop_vectors = pop_vectors
 
@@ -229,8 +229,9 @@ class Recording():
 
 		for stim in activity:
 			raster = [np.histogram(clu, bins)[0] for clu in activity[stim]]
-			plt.imshow(raster)
-			plt.savefig('Output/Raster/raster_{}.png'.format(params.sound_names[stim]))
+			print(np.max(raster), np.min(raster))
+			plt.imshow(raster, cmap='binary', vmin=0, vmax=np.max(raster)/3)
+			plt.savefig('Output/Raster/raster_{}.svg'.format(params.sound_names[stim]), dpi=300)
 			plt.close()
 
 		self.activity = activity

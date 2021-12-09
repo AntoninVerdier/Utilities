@@ -29,15 +29,9 @@ params = s.params()
 def compute_svm(X, y):
 
     scores = []
-    for train_index, test_index in kf.split(X):
-        clf = svm.SVC(kernel='linear')
-        X_train, X_test = X[train_index], X[test_index]
-        y_train, y_test = y[train_index], y[test_index]
-
-        clf.fit(X_train, y_train)
-        scores.append(clf.score(X_test, y_test))
-
-        y_pred = y_true
+    X, y = shuffle(X, y)
+    clf = svm.SVC(kernel='linear')
+    scores = cross_val_score(clf, X, y, cv=5)
 
 
     ########## Need to make sure that data is shuffled
@@ -70,8 +64,8 @@ def svm_preformance(rec):
     plt.show()
 
 def psychocurve(rec):
-    for i, t in enumerate([params.task1, params.task2]):
-        pop_vectors = rec.complete_vectors(0, 1000)
+    for i, t in enumerate([params.task2]):
+        pop_vectors = rec.get_population_vectors(0, 100)
 
         X = np.array([pop_vectors[stim][p] for stim in t for p in pop_vectors[stim]])
         y = np.array([0 if i < 8 else 1 for i, stim in enumerate(t) for p in pop_vectors[stim]])
@@ -79,7 +73,7 @@ def psychocurve(rec):
 
         #X, y, true_classes = shuffle(X, y, true_classes)
         psycos = []
-        for train_index, test_index in RepeatedKFold(n_splits=3, n_repeats=20).split(X):
+        for train_index, test_index in RepeatedKFold(n_splits=5, n_repeats=10).split(X):
             clf = svm.SVC(kernel='linear')
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
@@ -99,17 +93,11 @@ def psychocurve(rec):
                 except ZeroDivisionError:
                     psycos.append(0)
 
-        psycos = np.array(psycos).reshape(60, 16)
+        psycos = np.array(psycos).reshape(50, 16)
         psycos = np.mean(psycos, axis=0)
-        plt.plot(np.geomspace(6e3, 16e3, 16), psycos)
-        plt.show()
 
-
-    # plt.legend()
-    # plt.savefig('performance_svm_population.png')
-    # plt.show()
-
-
+        plt.plot(np.geomspace(20, 200, 16), psycos, color='forestgreen', linewidth=2, markersize=6, marker='o')
+        plt.savefig('Output/TimeAverage/Task2_{}'.format(i), dpi=300)
 
 
 recs = []
@@ -124,9 +112,12 @@ for folder in os.listdir('/home/pouple/PhD/Data/Electrophy/To_analyze'):
 
 rec = np.sum(recs)
 #rec.raster_plot()
+#rec.raster_plot()
 
 #svm_preformance(rec)
 psychocurve(rec)
+# for i in np.arange(10, 1010):
+#     psychocurve(rec)
 
 
 pop_vectors = rec.get_population_vectors(0, 1000)
