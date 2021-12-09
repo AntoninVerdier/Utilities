@@ -31,9 +31,12 @@ class Recording():
 		otherkeys = [k for k in other.d_stims]
 		common_keys = np.intersect1d(selfkeys, otherkeys)
 
+		new_dstism = {}
 		for sound in common_keys:
+			new_dstism[sound] ={}
 			for p in range(n_pres):
-				self.d_stims[sound][p] += other.d_stims[sound][p] # WTF are you doing you shou_ld be addingf presentatiuons
+				new_dstism[sound][p] = self.d_stims[sound][p] + other.d_stims[sound][p]
+		self.d_stims = new_dstism
 
 		return self
 
