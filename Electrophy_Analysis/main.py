@@ -7,6 +7,7 @@ import h5py
 import matplotlib
 from rich import print
 from rich.progress import track
+from rich.traceback import install 
 import matplotlib.pyplot as plt
 import pandas as pd 
 import seaborn as sns
@@ -63,9 +64,9 @@ def svm_preformance(rec):
     plt.savefig('performance_svm_population.png')
     plt.show()
 
-def psychocurve(rec):
-    for i, t in enumerate([params.task2]):
-        pop_vectors = rec.get_population_vectors(0, 100)
+def psychocurve(rec, p=1000, timebin=10):
+    for i, t in enumerate([params.task1, params.task2]):
+        pop_vectors = rec.get_complete_vectors(0, p, timebin=timebin)
 
         X = np.array([pop_vectors[stim][p] for stim in t for p in pop_vectors[stim]])
         y = np.array([0 if i < 8 else 1 for i, stim in enumerate(t) for p in pop_vectors[stim]])
@@ -73,7 +74,7 @@ def psychocurve(rec):
 
         #X, y, true_classes = shuffle(X, y, true_classes)
         psycos = []
-        for train_index, test_index in RepeatedKFold(n_splits=5, n_repeats=10).split(X):
+        for train_index, test_index in RepeatedKFold(n_splits=5, n_repeats=20).split(X):
             clf = svm.SVC(kernel='linear')
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
@@ -93,16 +94,20 @@ def psychocurve(rec):
                 except ZeroDivisionError:
                     psycos.append(0)
 
-        psycos = np.array(psycos).reshape(50, 16)
+        psycos = np.array(psycos).reshape(100, 16)
         psycos = np.mean(psycos, axis=0)
 
         plt.plot(np.geomspace(20, 200, 16), psycos, color='forestgreen', linewidth=2, markersize=6, marker='o')
-        plt.savefig('Output/TimeAverage/Task2_{}'.format(i), dpi=300)
+        plt.xscale('log')
+        plt.savefig('Output/TimeAverage/Task{}_finer_{}_{}ms'.format(i, p, timebin), dpi=300)
+        
+        plt.close()
 
 
 recs = []
-for folder in os.listdir('/home/pouple/PhD/Data/Electrophy/To_analyze'):
-    cp = os.path.join('/home/pouple/PhD/Data/Electrophy/To_analyze', folder)
+main_folder = '/home/anverdie/Documents/Electrophy/To_analyze'
+for folder in os.listdir(main_folder):
+    cp = os.path.join(main_folder, folder)
     print('Analyzing {} ...'.format(folder))
     rec = Recording(cp, os.path.join(cp, 'SoundInfo.mat'), name=folder)
     rec.select_data_quality(quality='good')
@@ -115,9 +120,9 @@ rec = np.sum(recs)
 #rec.raster_plot()
 
 #svm_preformance(rec)
+# for j in track(range(40, 80, 5)):
+#     for i in np.arange(10, j + 5, 5):
 psychocurve(rec)
-# for i in np.arange(10, 1010):
-#     psychocurve(rec)
 
 
 pop_vectors = rec.get_population_vectors(0, 1000)

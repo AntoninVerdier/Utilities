@@ -158,9 +158,9 @@ class Recording():
 
 		return pop_vectors
 
-	def get_timings_vectors(self, pad_before, pad_after):
+	def get_timings_vectors(self, pad_before, pad_after, timebin=10):
 		time_vectors = {}
-		bins = list(np.arange(pad_before, pad_after + 10, 10))
+		bins = list(np.arange(pad_before, pad_after + 10, timebin))
 		for stim in self.d_stims:
 			time_vectors[stim] = {}
 			for pres in self.d_stims[stim]:
@@ -175,7 +175,7 @@ class Recording():
 
 		return time_vectors
 
-	def complete_vectors(self, pad_before, pad_after, timebin):
+	def get_complete_vectors(self, pad_before, pad_after, timebin):
 		bins = np.arange(0, 1000, timebin)
 		pop_vectors = {}
 		for stim in self.d_stims:
