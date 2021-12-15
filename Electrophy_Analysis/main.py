@@ -65,7 +65,8 @@ def svm_preformance(rec):
     plt.show()
 
 def psychocurve(rec, p=1000, timebin=10):
-    for i, t in enumerate([params.task1, params.task2]):
+    colors = ['blue', 'forestgreen']
+    for tidx, t in enumerate([params.task1, params.task2]):
         pop_vectors = rec.get_complete_vectors(0, p, timebin=timebin)
 
         X = np.array([pop_vectors[stim][p] for stim in t for p in pop_vectors[stim]])
@@ -74,7 +75,7 @@ def psychocurve(rec, p=1000, timebin=10):
 
         #X, y, true_classes = shuffle(X, y, true_classes)
         psycos = []
-        for train_index, test_index in RepeatedKFold(n_splits=5, n_repeats=20).split(X):
+        for train_index, test_index in track(RepeatedKFold(n_splits=5, n_repeats=10).split(X), total=50):
             clf = svm.SVC(kernel='linear')
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
@@ -94,18 +95,18 @@ def psychocurve(rec, p=1000, timebin=10):
                 except ZeroDivisionError:
                     psycos.append(0)
 
-        psycos = np.array(psycos).reshape(100, 16)
+        psycos = np.array(psycos).reshape(50, 16)
         psycos = np.mean(psycos, axis=0)
 
-        plt.plot(np.geomspace(20, 200, 16), psycos, color='forestgreen', linewidth=2, markersize=6, marker='o')
+        plt.plot(np.geomspace(20, 200, 16), psycos, color=colors[tidx], linewidth=2, markersize=6, marker='o')
         plt.xscale('log')
-        plt.savefig('Output/TimeAverage/Task{}_finer_{}_{}ms'.format(i, p, timebin), dpi=300)
+        plt.savefig('Output/TimeAverage/Task{}_win_{}_bin_{}ms'.format(tidx + 1, p, timebin), dpi=300)
         
         plt.close()
 
 
 recs = []
-main_folder = '/home/anverdie/Documents/Electrophy/To_analyze'
+main_folder = '/home/pouple/PhD/Data/Electrophy/To_analyze'
 for folder in os.listdir(main_folder):
     cp = os.path.join(main_folder, folder)
     print('Analyzing {} ...'.format(folder))
