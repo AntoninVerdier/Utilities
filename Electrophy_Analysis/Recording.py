@@ -142,7 +142,7 @@ class Recording():
 			pkl.dump(self.d_stims, open(os.path.join(self.output, '{}_aligned_spikes.pkl'.format(self.name)), 'wb'))
 
 
-	def get_population_vectors(self, pad_before, pad_after):
+	def get_population_vectors(self, pad_before, pad_after, normalize=True):
 		pop_vectors = {}
 		for stim in self.d_stims:
 			pop_vectors[stim] = {}
@@ -175,7 +175,7 @@ class Recording():
 
 		return time_vectors
 
-	def get_complete_vectors(self, pad_before, pad_after, timebin):
+	def get_complete_vectors(self, pad_before, pad_after, timebin, normalize=True):
 		bins = np.arange(0, 1000, timebin)
 		pop_vectors = {}
 		for stim in self.d_stims:
@@ -185,7 +185,10 @@ class Recording():
 				for i, clu in enumerate(self.d_stims[stim][pres]):
 					clu = clu[clu > - pad_before]
 					clu = np.array(clu[clu < pad_after], dtype=np.int64)
-					pop_vector.append(np.histogram(clu, bins)[0])
+					pvec = np.histogram(clu, bins)[0]
+					if normalize:
+						pvec = np.nan_to_num((pvec - np.min(pvec))/np.max(pvec))
+					pop_vector.append(pvec)
 				pop_vectors[stim][pres] = np.array(pop_vector).flatten()
 
 		self.pop_vectors = pop_vectors
