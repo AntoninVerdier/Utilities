@@ -75,7 +75,7 @@ def psychocurve(rec, p=1000, timebin=10):
 
         #X, y, true_classes = shuffle(X, y, true_classes)
         psycos = []
-        for train_index, test_index in track(RepeatedKFold(n_splits=5, n_repeats=10).split(X), total=50):
+        for train_index, test_index in track(LeaveOneOut().split(X), total=X.shape[0]):
             clf = svm.SVC(kernel='linear')
             X_train, X_test = X[train_index], X[test_index]
             y_train, y_test = y[train_index], y[test_index]
@@ -95,7 +95,7 @@ def psychocurve(rec, p=1000, timebin=10):
                 except ZeroDivisionError:
                     psycos.append(0)
 
-        psycos = np.array(psycos).reshape(50, 16)
+        psycos = np.array(psycos).reshape(X.shape[0], 16)
         psycos = np.mean(psycos, axis=0)
 
         plt.plot(np.geomspace(20, 200, 16), psycos, color=colors[tidx], linewidth=2, markersize=6, marker='o')
@@ -105,133 +105,134 @@ def psychocurve(rec, p=1000, timebin=10):
         plt.close()
 
 
-recs = []
-main_folder = '/home/pouple/PhD/Data/Electrophy/To_analyze'
-for folder in os.listdir(main_folder):
-    cp = os.path.join(main_folder, folder)
-    print('Analyzing {} ...'.format(folder))
-    rec = Recording(cp, os.path.join(cp, 'SoundInfo.mat'), name=folder)
-    rec.select_data_quality(quality='good')
-    rec.ttl_alignment(multi=False)
-    recs.append(rec)
+if __name__ == '__name__':
+    recs = []
+    main_folder = '/home/anverdie/Documents/Electrophy/To_analyze'
+    for folder in os.listdir(main_folder):
+        cp = os.path.join(main_folder, folder)
+        print('Analyzing {} ...'.format(folder))
+        rec = Recording(cp, os.path.join(cp, 'SoundInfo.mat'), name=folder)
+        rec.select_data_quality(quality='good')
+        rec.ttl_alignment(multi=False)
+        recs.append(rec)
 
 
-rec = np.sum(recs)
-#rec.raster_plot()
-#rec.raster_plot()
+    rec = np.sum(recs)
+    #rec.raster_plot()
+    #rec.raster_plot()
 
-#svm_preformance(rec)
-# for j in track(range(40, 80, 5)):
-#     for i in np.arange(10, j + 5, 5):
-psychocurve(rec)
-
-
-pop_vectors = rec.get_population_vectors(0, 1000)
-
-cmap = matplotlib.cm.get_cmap('hsv')
-colors = []
-for stim in [s for s in np.unique(rec.s_vector) for p in pop_vectors[s]]:
-    if stim in params.task1:
-        colors.append(cmap(0.1)) # Orange
-    elif stim in params.task2:
-        colors.append(cmap(0.3)) # vert
-    elif stim in params.task3:
-        colors.append(cmap(0.5)) # Blue
-    elif stim in params.task4:
-        colors.append(cmap(0.7))  #ble dark
-    else:
-        colors.append(cmap(0.9)) # Pink
+    #svm_preformance(rec)
+    # for j in track(range(40, 80, 5)):
+    #     for i in np.arange(10, j + 5, 5):
+    psychocurve(rec)
 
 
+    pop_vectors = rec.get_population_vectors(0, 1000)
 
-# stims = [s for s in np.unique(rec.s_vector) for p in pop_vectors[s]]
-# colors, values = [], []
-# for stim in stims:
-#   if stim in params.task1:
-#       cmap = matplotlib.cm.get_cmap('Blues')
-#       value = np.where(stim == params.task1)[0][0]/len(params.task1)
-#   elif stim in params.task2:
-#       cmap = matplotlib.cm.get_cmap('Reds')
-#       value = np.where(stim == params.task2)[0][0]/len(params.task2)
-#   elif stim in params.task3:
-#       cmap = matplotlib.cm.get_cmap('Greens')
-#       value = np.where(stim == params.task3)[0][0]/len(params.task3)
-#   elif stim in params.task4:
-#       cmap = matplotlib.cm.get_cmap('Greys')
-#       value = np.where(stim == params.task4)[0][0]/len(params.task4)
-#   else:
-#       value = (1, 1, 1, 1)
-
-#   colors.append(cmap(value))
-#   print(len(colors))
+    cmap = matplotlib.cm.get_cmap('hsv')
+    colors = []
+    for stim in [s for s in np.unique(rec.s_vector) for p in pop_vectors[s]]:
+        if stim in params.task1:
+            colors.append(cmap(0.1)) # Orange
+        elif stim in params.task2:
+            colors.append(cmap(0.3)) # vert
+        elif stim in params.task3:
+            colors.append(cmap(0.5)) # Blue
+        elif stim in params.task4:
+            colors.append(cmap(0.7))  #ble dark
+        else:
+            colors.append(cmap(0.9)) # Pink
 
 
-for time in track(range(50, 1050, 50)):
-    pop_vectors = rec.get_population_vectors(0, time)
+
+    # stims = [s for s in np.unique(rec.s_vector) for p in pop_vectors[s]]
+    # colors, values = [], []
+    # for stim in stims:
+    #   if stim in params.task1:
+    #       cmap = matplotlib.cm.get_cmap('Blues')
+    #       value = np.where(stim == params.task1)[0][0]/len(params.task1)
+    #   elif stim in params.task2:
+    #       cmap = matplotlib.cm.get_cmap('Reds')
+    #       value = np.where(stim == params.task2)[0][0]/len(params.task2)
+    #   elif stim in params.task3:
+    #       cmap = matplotlib.cm.get_cmap('Greens')
+    #       value = np.where(stim == params.task3)[0][0]/len(params.task3)
+    #   elif stim in params.task4:
+    #       cmap = matplotlib.cm.get_cmap('Greys')
+    #       value = np.where(stim == params.task4)[0][0]/len(params.task4)
+    #   else:
+    #       value = (1, 1, 1, 1)
+
+    #   colors.append(cmap(value))
+    #   print(len(colors))
+
+
+    for time in track(range(50, 1050, 50)):
+        pop_vectors = rec.get_population_vectors(0, time)
+        X = np.array([pop_vectors[stim][p] for stim in np.unique(rec.s_vector) for p in pop_vectors[stim]])
+
+        tsne = TSNE(n_components=2)
+        Y = tsne.fit_transform(X)
+
+        plt.scatter(Y[:, 0], Y[:, 1], c=colors)
+
+
+        plt.savefig('Output/TSNE/tsne_time_{}.png'.format(time))
+        plt.close()
+
     X = np.array([pop_vectors[stim][p] for stim in np.unique(rec.s_vector) for p in pop_vectors[stim]])
 
-    tsne = TSNE(n_components=2)
-    Y = tsne.fit_transform(X)
+    umap = umap.UMAP(n_neighbors=5)
+    Y = umap.fit_transform(X)
 
-    plt.scatter(Y[:, 0], Y[:, 1], c=colors)
+    print(X.shape, Y.shape)
+    plt.scatter(Y[green, 0], Y[green, 1], c="g")
+    plt.scatter(Y[red, 0], Y[red, 1], c="r")
+    plt.scatter(Y[blue, 0], Y[blue, 1], c="b")
+    plt.scatter(Y[yellow, 0], Y[yellow, 1], c="y")
+    plt.scatter(Y[gray, 0], Y[gray, 1], c="gray")
 
 
-    plt.savefig('Output/TSNE/tsne_time_{}.png'.format(time))
+
+    plt.show()
     plt.close()
 
-X = np.array([pop_vectors[stim][p] for stim in np.unique(rec.s_vector) for p in pop_vectors[stim]])
+    # total_rec.get_population_vectors(0, 500)
 
-umap = umap.UMAP(n_neighbors=5)
-Y = umap.fit_transform(X)
-
-print(X.shape, Y.shape)
-plt.scatter(Y[green, 0], Y[green, 1], c="g")
-plt.scatter(Y[red, 0], Y[red, 1], c="r")
-plt.scatter(Y[blue, 0], Y[blue, 1], c="b")
-plt.scatter(Y[yellow, 0], Y[yellow, 1], c="y")
-plt.scatter(Y[gray, 0], Y[gray, 1], c="gray")
-
-
-
-plt.show()
-plt.close()
-
-# total_rec.get_population_vectors(0, 500)
-
-# rec = Recording(paths.Ksdir, paths.SoundInfo, name='testing')
-# rec.select_data_quality(quality='good')
-# rec.ttl_alignment(multi=False)
+    # rec = Recording(paths.Ksdir, paths.SoundInfo, name='testing')
+    # rec.select_data_quality(quality='good')
+    # rec.ttl_alignment(multi=False)
 
 
 
 
-# Still need to drax psycoM curves
+    # Still need to drax psycoM curves
 
 
 
 
 
-# Compute global N x T matrix
-# dict_timings = {}
-# for clu in track(usable_clusters, description='Computing individual cluster ...'):
-#   dict_timings[clu] = np.where(spikes_cluster == clu)[0]
+    # Compute global N x T matrix
+    # dict_timings = {}
+    # for clu in track(usable_clusters, description='Computing individual cluster ...'):
+    #   dict_timings[clu] = np.where(spikes_cluster == clu)[0]
 
 
-# dict_stim_timings = {}
-# for stim in track(np.unique(stim_vector), description='Generating individual timings ...'):
-#   curr_stim = np.where(stim_vector == stim)[0]
-#   dict_stim_timings[stim] = {}
-#   for i, pres in enumerate(curr_stim):
-#       ttl = ttl_indices[pres]
-#       dict_stim_timings[stim][i] = [(v[np.logical_and(v >= ttl - params.pad_before, v <= ttl + params.pad_after)] - ttl)/params.fs*1000 for v in list(dict_timings.values())]
+    # dict_stim_timings = {}
+    # for stim in track(np.unique(stim_vector), description='Generating individual timings ...'):
+    #   curr_stim = np.where(stim_vector == stim)[0]
+    #   dict_stim_timings[stim] = {}
+    #   for i, pres in enumerate(curr_stim):
+    #       ttl = ttl_indices[pres]
+    #       dict_stim_timings[stim][i] = [(v[np.logical_and(v >= ttl - params.pad_before, v <= ttl + params.pad_after)] - ttl)/params.fs*1000 for v in list(dict_timings.values())]
 
-# for stim in dict_stim_timings:
-#   curr_stim = [[sum(list(dict_stim_timings[stim][i][j])) for i in dict_stim_timings[stim]] for j in range(len(usable_clusters))]
-#   dict_stim_timings[stim] = [a for l in curr_stim for a in l if a]
-#   dict_stim_timings[stim].sort()
-# #     dict_stim_timings[stim] = [l for l in curr_stim if l]
+    # for stim in dict_stim_timings:
+    #   curr_stim = [[sum(list(dict_stim_timings[stim][i][j])) for i in dict_stim_timings[stim]] for j in range(len(usable_clusters))]
+    #   dict_stim_timings[stim] = [a for l in curr_stim for a in l if a]
+    #   dict_stim_timings[stim].sort()
+    # #     dict_stim_timings[stim] = [l for l in curr_stim if l]
 
-# print([len(dict_stim_timings[stim]) for stim in dict_stim_timings])
+    # print([len(dict_stim_timings[stim]) for stim in dict_stim_timings])
 
 
 
@@ -240,36 +241,36 @@ plt.close()
 
 
 
-# all_psth = {}
-# for i in track(range(max(stim_vector)), description='Generating PSTHs...'):
-#   psths = []
-#   curr_stim = np.where(stim_vector == i)[0]
-#   for stim in curr_stim:
-#       curr_ttl = list(ttl_indices)[0::2][stim]
+    # all_psth = {}
+    # for i in track(range(max(stim_vector)), description='Generating PSTHs...'):
+    #   psths = []
+    #   curr_stim = np.where(stim_vector == i)[0]
+    #   for stim in curr_stim:
+    #       curr_ttl = list(ttl_indices)[0::2][stim]
 
-#       curr_n_spikes = spikes_times[spikes_times > curr_ttl - params.pad_before]
-#       curr_n_spikes = np.array(curr_n_spikes[curr_n_spikes < curr_ttl + params.pad_after], dtype=np.int64)
-#       psths.append(np.array(curr_n_spikes - curr_ttl)/params.fs*1000)
+    #       curr_n_spikes = spikes_times[spikes_times > curr_ttl - params.pad_before]
+    #       curr_n_spikes = np.array(curr_n_spikes[curr_n_spikes < curr_ttl + params.pad_after], dtype=np.int64)
+    #       psths.append(np.array(curr_n_spikes - curr_ttl)/params.fs*1000)
 
-#   psth = [i for p in psths for i in p]
-#   all_psth[sound_names[i]] = psth
-
-
-
-# for sound in track(all_psth, description='Drawing Figures...'):
-#   sns.set_theme(style='ticks')
-
-#   f, ax = plt.subplots(figsize=(7, 5))
-#   sns.despine(f)
-
-#   sns.histplot(data=all_psth[sound], palette='light:m_r',
-#                edgecolor='.3', linewidth=.5, bins=50)
-#   plt.axvline(0, color='red')
-#   ax.set_xlabel('Time (ms)')
-#   ax.set_ylabel('# of spikes')
-#   ax.set_title('{}'.format(sound[:-4]))
-#   plt.savefig(os.path.join(paths.Output, '{}.png'.format(sound[:-4])), dpi=150)
-#   plt.close()
+    #   psth = [i for p in psths for i in p]
+    #   all_psth[sound_names[i]] = psth
 
 
-# May be useful to get correlation matrices between histograms
+
+    # for sound in track(all_psth, description='Drawing Figures...'):
+    #   sns.set_theme(style='ticks')
+
+    #   f, ax = plt.subplots(figsize=(7, 5))
+    #   sns.despine(f)
+
+    #   sns.histplot(data=all_psth[sound], palette='light:m_r',
+    #                edgecolor='.3', linewidth=.5, bins=50)
+    #   plt.axvline(0, color='red')
+    #   ax.set_xlabel('Time (ms)')
+    #   ax.set_ylabel('# of spikes')
+    #   ax.set_title('{}'.format(sound[:-4]))
+    #   plt.savefig(os.path.join(paths.Output, '{}.png'.format(sound[:-4])), dpi=150)
+    #   plt.close()
+
+
+    # May be useful to get correlation matrices between histograms

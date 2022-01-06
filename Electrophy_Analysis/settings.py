@@ -2,8 +2,8 @@ import os
 
 class paths():
 	def __init__(self):
-		self.Ksdir = '/home/pouple/PhD/Data/Electrophy/'
-		self.SoundInfo = '/home/pouple/PhD/Data/Electrophy/To_analyze/08_11_2021_1'
+		self.Ksdir = '/home/anverdie/Documents/Electrophy'
+		self.SoundInfo = '/home/anverdie/Documents/Electrophy/To_analyze'
 		self.Output = os.path.join(self.Ksdir, 'Output')
 
 		if not os.path.exists(self.Output):
@@ -18,6 +18,11 @@ class params():
 		self.task1 = [52, 53, 54, 56, 57, 59, 60, 62, 31, 32, 34, 35, 37, 38, 40, 41]
 		self.task2 = [44, 45, 46, 47, 48, 49, 50, 51, 55, 58, 61, 33, 36, 39, 42, 43]
 		self.task3 = [8, 9, 10, 11, 12 ,13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7]
+
+		self.task31 = [8, 12 , 16, 20, 0, 4]
+		self.task32 = [8, 9, 10, 11, 12 ,13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7]
+		self.task33 = [8, 9, 10, 11, 12 ,13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 0, 1, 2, 3, 4, 5, 6, 7]
+
 
 		self.task4 = [29, 26, 27, 28, 30, 25]
 
