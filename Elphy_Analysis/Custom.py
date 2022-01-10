@@ -62,6 +62,7 @@ class Mouse(object):
         self.ID = ID
         self.path = path
         self.output = output
+        self.rmgaps=rmgaps
 
         if self.ID:
             self.df_beh = self.__get_data_from_gsheet()
@@ -166,7 +167,7 @@ class Mouse(object):
             if tag:
                 print('ok')
                 if file.split('_')[0] in tag:
-                    current_file = self.File(os.path.join(folder, file))
+                    current_file = self.File(os.path.join(folder, file), self.rmgaps)
                     if len(current_file.tr_corr) != 0:
                         files.append(current_file)
             else:
@@ -186,7 +187,7 @@ class Mouse(object):
             for t in tag:
                 if t + '_' == file.split('_')[0] + '_':
                     print(file)
-                    current_file = self.File(os.path.join(folder, file))
+                    current_file = self.File(os.path.join(folder, file), self.rmgaps)
                     if len(current_file.tr_corr) != 0:
                         files.append(current_file)
 
@@ -200,6 +201,13 @@ class Mouse(object):
 
     def save(self):
         pass
+
+    def select_best_trials(self, n_trials):
+        files = self.elphy
+        ps, _ = self.perf()
+        bests = np.argsort(ps)
+        self.elphy = list(np.array(files)[bests[-n_trials:]])
+        print('Best scores are :', np.array(ps)[bests[-n_trials:]])
 
     def __weight_fig(self, weights, dates):
         plt.figure(figsize=(12, 9))
@@ -309,8 +317,6 @@ class Mouse(object):
 
         tasks = np.array([item for f in files for item in f.tr_type])
         corr = np.array([item for f in files for item in f.tr_corr])
-
-        print(np.max(tasks))
         
         
         if self.reversed:
@@ -532,13 +538,34 @@ class Mouse(object):
         # plt.close()
                 
 
+        def __removeGaps(self, ttype, licks, corr, xpar):
+            """ Remove gaps when the mouse is not licking at all so the data is not corrupted by a bored mouse
+            """
+            licks = list(licks)
+            ttype = list(ttype)
+            corr = list(corr)
+            str_licks = [1 if l > 9 else l for l in licks]
+            str_licks = [str(i) for i in str_licks]
+            str_licks = ''.join(str_licks)
+            no_licks = [[m.start(), m.end()] for m in re.finditer('[^1-9]+', str_licks) if m.end() - m.start() > 15]
 
+            for gap in reversed(no_licks):
+                del licks[gap[0]:gap[1]]
+                del ttype[gap[0]:gap[1]]
+                del corr[gap[0]:gap[1]]
+
+            print('Gaps removed - {} : '.format(self.date))
+            for gap in no_licks:
+                print(gap)
+
+            return ttype, licks, corr
 
 
     class File(object):
         """DAT file as an object for better further use"""
-        def __init__(self, path, rmgaps=True):
+        def __init__(self, path, rmgaps):
             self.path = path
+            self.rmgaps=rmgaps
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
             #self.__removeBadBlocks(0.7, 30)
