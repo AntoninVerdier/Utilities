@@ -58,11 +58,12 @@ class Mouse(object):
     lick_number_by_task(names=None, plot=True)
         Return the number of licks for each type of task in the session 
    """
-    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, collab=False):
+    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, collab=False, verbose=True):
         self.ID = ID
         self.path = path
         self.output = output
         self.rmgaps=rmgaps
+        self.verbose = verbose
 
         if self.ID:
             self.df_beh = self.__get_data_from_gsheet()
@@ -165,7 +166,6 @@ class Mouse(object):
         files = []
         for file in os.listdir(folder):
             if tag:
-                print('ok')
                 if file.split('_')[0] in tag:
                     current_file = self.File(os.path.join(folder, file), self.rmgaps)
                     if len(current_file.tr_corr) != 0:
@@ -182,7 +182,7 @@ class Mouse(object):
         return files
     def __process_elphy_file_by_tag(self, folder, tag, date=None):
         files = []
-        print('Processing files for mice {}...'.format(self.ID))
+        if self.verbose: print('Processing files for mice {}...'.format(self.ID))
         for file in os.listdir(folder):
             for t in tag:
                 if t + '_' == file.split('_')[0] + '_':
