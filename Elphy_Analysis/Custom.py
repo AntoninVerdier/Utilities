@@ -186,7 +186,7 @@ class Mouse(object):
         for file in os.listdir(folder):
             for t in tag:
                 if t + '_' == file.split('_')[0] + '_':
-                    print(file)
+                    if self.verbose: print(file)
                     current_file = self.File(os.path.join(folder, file), self.rmgaps)
                     if len(current_file.tr_corr) != 0:
                         files.append(current_file)
@@ -568,7 +568,7 @@ class Mouse(object):
             self.rmgaps=rmgaps
             self.__filename_parser(os.path.basename(self.path))
             self.__extract_data(self.path, rmgaps)
-            #self.__removeBadBlocks(0.7, 30)
+            #self.__removeBadBlocks(0.7, 64)
 
         def __extract_data(self, path, rmgaps):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
