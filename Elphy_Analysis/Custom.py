@@ -58,7 +58,7 @@ class Mouse(object):
     lick_number_by_task(names=None, plot=True)
         Return the number of licks for each type of task in the session 
    """
-    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, collab=False, verbose=True, rmblocks=None):
+    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, dlp=False, collab=False, verbose=True, rmblocks=None):
         self.ID = ID
         self.path = path
         self.output = output
@@ -76,14 +76,15 @@ class Mouse(object):
             self.ID = os.path.basename(os.path.normpath(path))
             #self.elphy = self.__process_elphy_at_file(path)
             self.elphy = self.__process_elphy_file_by_tag(path, tag, date)
-            self.df_beh = self.__get_data_from_gsheet(collab=collab)
+            self.df_beh = self.__get_data_from_gsheet(collab=collab, dlp=dlp)
         else:
             print('Please provide a path to retrieve data from elphy dat files')
 
-    def __get_data_from_gsheet(self, collab=False):
+    def __get_data_from_gsheet(self, collab=False, dlp=False):
         """ Retrieve behavioural etadat from Google Sheet"""
         SAMPLE_SPREADSHEET_ID_input = '1PNvkKMTGbVxGGG-2eyWFEtG9dcv3ZVb9m9zVixjRlfc'
         if collab: SAMPLE_SPREADSHEET_ID_input = '1utsDBiSvcNIuYyOS4LiIG0wRCn7fdxf7-EbAjwbXntE'
+        if dlp: SAMPLE_SPREADSHEET_ID_input = '1LaetwSVk1E4hXb5_eDdARpfZD25l2njMKIXBHeZxqHo'
         SAMPLE_RANGE_NAME = 'A1:BA1000'
 
         creds = self.__google_credentials()
