@@ -621,9 +621,9 @@ class Mouse(object):
                 del ttype[gap[0]:gap[1]]
                 del corr[gap[0]:gap[1]]
 
-            print('Gaps removed - {} : '.format(self.date))
-            for gap in no_licks:
-                print(gap)
+            # print('Gaps removed - {} : '.format(self.date))
+            # for gap in no_licks:
+            #     print(gap)
 
             return ttype, licks, corr
 
