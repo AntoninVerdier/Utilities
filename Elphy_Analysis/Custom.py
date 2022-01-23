@@ -540,29 +540,6 @@ class Mouse(object):
         # plt.bar(x=names, height=final_scores, yerr=final_std)
         # plt.savefig('{}.png'.format(self.ID))
         # plt.close()
-                
-
-        def __removeGaps(self, ttype, licks, corr, xpar):
-            """ Remove gaps when the mouse is not licking at all so the data is not corrupted by a bored mouse
-            """
-            licks = list(licks)
-            ttype = list(ttype)
-            corr = list(corr)
-            str_licks = [1 if l > 9 else l for l in licks]
-            str_licks = [str(i) for i in str_licks]
-            str_licks = ''.join(str_licks)
-            no_licks = [[m.start(), m.end()] for m in re.finditer('[^1-9]+', str_licks) if m.end() - m.start() > 15]
-
-            for gap in reversed(no_licks):
-                del licks[gap[0]:gap[1]]
-                del ttype[gap[0]:gap[1]]
-                del corr[gap[0]:gap[1]]
-
-            print('Gaps removed - {} : '.format(self.date))
-            for gap in no_licks:
-                print(gap)
-
-            return ttype, licks, corr
 
 
     class File(object):
@@ -577,15 +554,23 @@ class Mouse(object):
 
         def __extract_data(self, path, rmgaps):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
-
             self.xpar = xpar
 
-            if rmgaps:
-                self.tr_type, self.tr_licks, self.tr_corr = self.__removeGaps(vectors['TRECORD'], vectors['LICKRECORD'], vectors['correct'], xpar)
+            if rmgaps == 'Brice':
+                self.tr_type, self.tr_licks, self.tr_corr, self.ta_type = self.__remove_gaps_brice(vectors['TRECORD'],
+                                                                                            vectors['LICKRECORD'],
+                                                                                            vectors['correct'],
+                                                                                            vectors['taskType'], xpar)
+            elif rmgaps == 'Antonin':
+                self.tr_type, self.tr_licks, self.tr_corr, self.ta_type = self.__remove_gaps_antonin(vectors['TRECORD'],
+                                                                                            vectors['LICKRECORD'],
+                                                                                            vectors['correct'],
+                                                                                            vectors['taskType'], xpar)
             else:
                 self.tr_type = vectors['TRECORD']
                 self.tr_licks = vectors['LICKRECORD']
                 self.tr_corr = vectors['correct']
+                self.ta_type =  vectors['taskType']
 
         def __filename_parser(self, filename):
             parsed_filename = filename.split('_')
@@ -600,32 +585,63 @@ class Mouse(object):
                     self.tr_type = np.concatenate([bloc for i, bloc in enumerate(np.split(np.array(self.tr_type), div)) if i in blocks_to_keep])
                     self.tr_licks = np.concatenate([bloc for i, bloc in enumerate(np.split(np.array(self.tr_licks), div)) if i in blocks_to_keep])
                     self.tr_corr = np.concatenate([bloc for i, bloc in enumerate(np.split(np.array(self.tr_corr), div)) if i in blocks_to_keep])
+                    self.ta_type = np.concatenate([bloc for i, bloc in enumerate(np.split(np.array(self.ta_type), div)) if i in blocks_to_keep])
                 else:
                     self.tr_type = []
                     self.tr_licks = []
                     self.tr_corr = []
+                    self.ta_type = []
 
-        def __removeGaps(self, ttype, licks, corr, xpar):
+        def __remove_gaps_antonin(self, ttype, licks, corr, tatype, xpar):
             """ Remove gaps when the mouse is not licking at all so the data is not corrupted by a bored mouse
             """
             licks = list(licks)
             ttype = list(ttype)
             corr = list(corr)
-            str_licks = [1 if l > 9 else l for l in licks]
+            tatype = list(tatype)
+            str_licks = [1 if l >= 1 else l for l in licks] # Assure que le nombre de lick soit un chiffre unique
             str_licks = [str(i) for i in str_licks]
             str_licks = ''.join(str_licks)
-            no_licks = [[m.start(), m.end()] for m in re.finditer('[^1-9]+', str_licks) if m.end() - m.start() > 15]
+            no_licks = [[m.start(), m.end()-1] for m in re.finditer('[0]+', str_licks) if m.end() - m.start() > 15]
 
             for gap in reversed(no_licks):
                 del licks[gap[0]:gap[1]]
                 del ttype[gap[0]:gap[1]]
                 del corr[gap[0]:gap[1]]
+                del tatype[gap[0]:gap[1]]
 
             # print('Gaps removed - {} : '.format(self.date))
             # for gap in no_licks:
             #     print(gap)
 
-            return ttype, licks, corr
+            return ttype, licks, corr, tatype
+
+        def __remove_gaps_brice(self, ttype, licks, corr, tatype, xpar):
+            """ Remove gaps when the mouse is not licking at all so the data is not corrupted by a bored mouse
+            """
+            licks = list(licks)
+            ttype = list(ttype)
+            corr = list(corr)
+            tatype = list(tatype)
+
+            go_idx = [i for i, g in enumerate(tatype) if g == 1]
+            go_corr = [int(corr[i]) for i in go_idx]
+
+            str_gos = [str(i) for i in go_corr]
+            str_gos = ''.join(str_gos)
+            no_licks = [[m.start(), m.end()-1] for m in re.finditer('[0]+', str_gos) if m.end() - m.start() > 5]
+
+            for gap in reversed(no_licks):
+                del licks[go_idx[gap[0]]:go_idx[gap[1]]]
+                del ttype[go_idx[gap[0]]:go_idx[gap[1]]]
+                del corr[go_idx[gap[0]]:go_idx[gap[1]]]
+                del tatype[go_idx[gap[0]]:go_idx[gap[1]]]
+
+            # print('Gaps removed - {} : '.format(self.date))
+            # for gap in no_licks:
+            #     print(gap)
+
+            return ttype, licks, corr, tatype
 
 # mouse = Mouse('/home/user/share/gaia/Data/Behavior/Antonin/741151', tag=['PC'], collab=False)
 # mouse.psychoacoustic(tag=['PC'], stim_freqs=np.geomspace(4e3, 16e3, 16), plot=True, threshold=70)
