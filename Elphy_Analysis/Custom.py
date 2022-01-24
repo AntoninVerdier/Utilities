@@ -58,13 +58,14 @@ class Mouse(object):
     lick_number_by_task(names=None, plot=True)
         Return the number of licks for each type of task in the session 
    """
-    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, dlp=False, collab=False, verbose=True, rmblocks=None):
+    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, dlp=False, collab=False, verbose=True, rmblocks=None, linkday=False):
         self.ID = ID
         self.path = path
         self.output = output
         self.rmgaps = rmgaps
         self.verbose = verbose
         self.rmblocks = rmblocks
+        self.linkday = linkday
 
         if self.ID:
             self.df_beh = self.__get_data_from_gsheet()
@@ -76,7 +77,19 @@ class Mouse(object):
             self.ID = os.path.basename(os.path.normpath(path))
             #self.elphy = self.__process_elphy_at_file(path)
             self.elphy = self.__process_elphy_file_by_tag(path, tag, date)
+            if self.linkday:
+                to_link = [i for i, f in enumerate(self.elphy[:-1]) if f.date == self.elphy[i + 1].date]
+                if to_link:
+                    for t in reversed(to_link):
+                        self.elphy[t].tr_type = np.append(self.elphy[t].tr_type , self.elphy[t + 1].tr_type)
+                        self.elphy[t].tr_corr = np.append(self.elphy[t].tr_corr , self.elphy[t + 1].tr_corr)
+                        self.elphy[t].ta_type = np.append(self.elphy[t].ta_type , self.elphy[t + 1].ta_type)
+                        self.elphy[t].tr_licks = np.append(self.elphy[t].tr_licks , self.elphy[t + 1].tr_licks)
+
+                        self.elphy = np.delete(self.elphy, t+1)
+
             self.df_beh = self.__get_data_from_gsheet(collab=collab, dlp=dlp)
+
         else:
             print('Please provide a path to retrieve data from elphy dat files')
 
