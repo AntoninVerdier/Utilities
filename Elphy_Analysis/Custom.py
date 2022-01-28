@@ -273,12 +273,20 @@ class Mouse(object):
         ax.set_yticks(np.linspace(0, 100, 11))
         plt.show()
 
-    def perf(self, tag=['DIS', 'PC'], plot=False, dateformat='%d%m%Y'):
+    def perf(self, tag=['DIS', 'PC'], plot=False, dateformat='%d%m%Y', blank=False, limit_n=False):
         """ Compute evolution of mouse's performance following the task's type"""
-
         files = self.elphy
+
+        if blank:
+            fs = []
+            for f in files:
+                idx_blank = np.where(np.array(f.tr_type) == 1)[0]
+                fs.append([c for i, c in enumerate(f.tr_corr) if i not in idx_blank])
+            
+            correct_tr = [100*sum(f)/len(f) for f in fs]
+        else:     
+            correct_tr = [100*sum(f.tr_corr)/len(f.tr_corr) for f in files]
         
-        correct_tr = [100*sum(f.tr_corr)/len(f.tr_corr) for f in files]
         dates = [f.date for f in files]
         tags = [f.tag for f in files]
 
@@ -292,8 +300,14 @@ class Mouse(object):
         if len(files) > 1 and plot:
             print('fig')
             self.__perf_fig(dates, correct_tr)
+        
+        if limit_n:
+            valid_trials = [0 if len(f.tr_corr) < 0.2 * f.xpar['fix']['MaxTrialNumber'] else 1 for f in files]
+            print(valid_trials)
+            return correct_tr, dates, valid_trials
 
-        return correct_tr, dates
+        else:
+            return correct_tr, dates
 
     def psychoacoustic_fig(self, frequencies, prob, stim_freqs):
 
@@ -456,6 +470,7 @@ class Mouse(object):
 
     def get_session_info(self, date):
         file = [file for file in self.elphy if file.date == date][0]
+        print(file.xpar)
         print('Lick Number : ', file.xpar['fix']['LickNumber'])
         print('Refractory Time :', file.xpar['fix']['RefractoryTime'])
         print('Random Refractory Time :', file.xpar['fix']['RandomRefractoryTime'])
@@ -568,6 +583,8 @@ class Mouse(object):
         def __extract_data(self, path, rmgaps):
             recordings, vectors, xpar = ertd.read_behavior(os.path.join(path), verbose=False)
             self.xpar = xpar
+
+            #print(self.xpar['soundlist'])
 
             if rmgaps == 'Brice':
                 self.tr_type, self.tr_licks, self.tr_corr, self.ta_type = self.__remove_gaps_brice(vectors['TRECORD'],

@@ -169,14 +169,13 @@ def all_weights(mice, plot=False):
 
     plt.savefig(os.path.join(mouse.output, 'weights_followup.svg'))
 
-def all_perfs(mice, plot=False):
+def all_perfs(mice, plot=False, blank=False):
 
     fig, axs = plt.subplots(4, 2, figsize=(20, 20))
     fig.suptitle('Perfs\' follow up - AVEC GAP REMOVAL')
 
     for i, mouse in enumerate(mice):
-        corr, d = mouse.perf(plot=plot)
-
+        corr, d = mouse.perf(plot=plot, blank=blank)
         axs[i%4, i//4].yaxis.grid(c='gainsboro', ls='--')
         axs[i%4, i//4].plot(d, corr, 'o-')
         axs[i%4, i//4].set_ylim(0, 100)
@@ -469,11 +468,12 @@ def histogram_slopes_PC(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), 
 
 # Collab perf
 if __name__ == '__main__':
-    mice_id = batch.id_third_batch
-    mice = [Mouse(path='/home/anverdie/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['DISC2'], collab=False, rmgaps=True, verbose=True) for i in mice_id]
+    
+    mice_id = batch.id_first_dlp
+    mice = [Mouse(path='/home/anverdie/share/gaia/Data/Optogenetic/DLP/{}'.format(i), tag=['SPA'], dlp=True, collab=False, rmgaps='Antonin', verbose=True, linkday=True) for i in mice_id]
 
     all_weights(mice)
-    all_perfs(mice)
+    all_perfs(mice, blank=True)
     all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(4e3, 16e3, 16), threshold=50)
 # for mouse in mice:p
 #     files = mouse.elphy
