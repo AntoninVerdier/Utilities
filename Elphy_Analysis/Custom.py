@@ -58,7 +58,7 @@ class Mouse(object):
     lick_number_by_task(names=None, plot=True)
         Return the number of licks for each type of task in the session 
    """
-    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, dlp=False, collab=False, verbose=True, rmblocks=None, linkday=False):
+    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, dlp=False, collab=False, verbose=True, rmblocks=None, linkday=False, blank=False):
         self.ID = ID
         self.path = path
         self.output = output
@@ -66,6 +66,7 @@ class Mouse(object):
         self.verbose = verbose
         self.rmblocks = rmblocks
         self.linkday = linkday
+        self.blank = blank
 
         if self.ID:
             self.df_beh = self.__get_data_from_gsheet()
@@ -277,7 +278,7 @@ class Mouse(object):
         """ Compute evolution of mouse's performance following the task's type"""
         files = self.elphy
 
-        if blank:
+        if self.blank or blank:
             fs = []
             for f in files:
                 idx_blank = np.where(np.array(f.tr_type) == 1)[0]

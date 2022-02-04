@@ -469,12 +469,12 @@ def histogram_slopes_PC(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), 
 # Collab perf
 if __name__ == '__main__':
     
-    mice_id = batch.id_first_dlp
-    mice = [Mouse(path='/home/anverdie/share/gaia/Data/Optogenetic/DLP/{}'.format(i), tag=['SPA'], dlp=True, collab=False, rmgaps='Antonin', verbose=True, linkday=True) for i in mice_id]
+    mice_id = batch.id_third_batch
+    mice = [Mouse(path='/home/anverdie/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['DISC2'], collab=False, rmgaps='Antonin', verbose=True, linkday=True) for i in mice_id]
 
     all_weights(mice)
     all_perfs(mice, blank=True)
-    all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(4e3, 16e3, 16), threshold=50)
+    #all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(4e3, 16e3, 16), threshold=50)
 # for mouse in mice:p
 #     files = mouse.elphy
 #     files = [f for f in files]
