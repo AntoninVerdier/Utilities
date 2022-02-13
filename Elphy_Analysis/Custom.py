@@ -606,10 +606,10 @@ class Mouse(object):
                                                                                             self.first_lick,
                                                                                             xpar)
             else:
-                self.tr_type = vectors['TRECORD']
-                self.tr_licks = vectors['LICKRECORD']
-                self.tr_corr = vectors['correct']
-                self.ta_type =  vectors['taskType']
+                self.tr_type = list(vectors['TRECORD'])
+                self.tr_licks = list(vectors['LICKRECORD'])
+                self.tr_corr = list(vectors['correct'])
+                self.ta_type =  list(vectors['taskType'])
 
         def __filename_parser(self, filename):
             parsed_filename = filename.split('_')
