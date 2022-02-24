@@ -470,7 +470,7 @@ def histogram_slopes_PC(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), 
 if __name__ == '__main__':
     
     mice_id = batch.id_third_batch
-    mice = [Mouse(path='/home/anverdie/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['DISC2'], collab=False, rmgaps='Brice', verbose=True, linkday=True) for i in mice_id]
+    mice = [Mouse(path='/home/anverdie/Documents/Code/check/{}'.format(i), tag=['DISC8'], collab=False, rmgaps='Antonin', verbose=True, linkday=True) for i in mice_id]
     # for m in mice:
     #     try:
     #         m.correct_graph('08022022')
