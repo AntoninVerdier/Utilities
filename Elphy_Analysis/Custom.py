@@ -58,7 +58,7 @@ class Mouse(object):
     lick_number_by_task(names=None, plot=True)
         Return the number of licks for each type of task in the session 
    """
-    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, dlp=False, collab=False, verbose=True, rmblocks=None, linkday=False, blank=False):
+    def __init__(self, path=None, ID=None, output='../Output', rmgaps=False, elphy_only=False, tag=None, date=None, dlp=False, collab=False, verbose=True, rmblocks=None, linkday=False, blank=False, gsheet=True):
         self.ID = ID
         self.path = path
         self.output = output
@@ -89,7 +89,11 @@ class Mouse(object):
 
                         self.elphy = np.delete(self.elphy, t+1)
 
-            self.df_beh = self.__get_data_from_gsheet(collab=collab, dlp=dlp)
+            if gsheet: 
+                print('Retrieve data from Gsheet')
+                self.df_beh = self.__get_data_from_gsheet(collab=collab, dlp=dlp)
+            else:
+                self.reversed = True
 
         else:
             print('Please provide a path to retrieve data from elphy dat files')
@@ -291,6 +295,8 @@ class Mouse(object):
         dates = [f.date for f in files]
         tags = [f.tag for f in files]
 
+        print(dates)
+
         dates = pd.to_datetime(dates, format=dateformat)
 
 
@@ -325,7 +331,7 @@ class Mouse(object):
 
         plt.show()
 
-    def psychoacoustic(self, tag=['PC'], last=False, stim_freqs=None, plot=True, date=None, threshold=None):
+    def psychoacoustic(self, tag=None, last=False, stim_freqs=None, plot=True, date=None, threshold=None):
         files = self.elphy
 
         for i, f in enumerate(files):
@@ -335,6 +341,10 @@ class Mouse(object):
 
         if date:
             files = [file for file in self.elphy if file.date in date]
+        if tag:
+            files = [file for file in self.elphy if file.tag in tag]
+            print([file.tag for file in self.elphy])
+
         # else:
         #     files = [file for file in self.elphy if file.tag in tag]
 
@@ -347,43 +357,50 @@ class Mouse(object):
 
         tasks = np.array([item for f in files for item in f.tr_type])
         corr = np.array([item for f in files for item in f.tr_corr])
-        
+        ta_type = np.array([item for f in files for item in f.ta_type])
         
         if self.reversed:
-            if np.max(tasks) % 16 == 0:
-                if np.max(tasks) == 32:
-                    licks = [not c if (1 <= tasks[i] <= 8) or (17 <= tasks[i] <= 24) else c for i, c in enumerate(corr)]
-                elif np.max(tasks) == 16:
-                    licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
-            if np.max(tasks) == 5:
-                licks = [not c if tasks[i] > 1 else c for i, c in enumerate(corr)]
-
-            if np.max(tasks) == 12:
-                licks = [not c if (1 <= tasks[i] <= 6) else c for i, c in enumerate(corr)]
-
+            licks = [not c if ta_type[i] == 1 else c for i, c in enumerate(corr)]
         else:
-            if np.max(tasks) % 16 == 0:
-                if np.max(tasks) == 32:
-                    licks = [not c if (9 <= tasks[i] <= 16) or (25 <= tasks[i] <= 32) else c for i, c in enumerate(corr)]
-                elif np.max(tasks) == 16:
-                    licks = [not c if 9 <= tasks[i] <= 16 else c for i, c in enumerate(corr)]
-            if np.max(tasks) == 5:
-                licks = [not c if tasks[i] <= 1 else c for i, c in enumerate(corr)]
+            licks = [not c if ta_type[i] == 2 else c for i, c in enumerate(corr)]
 
-            if np.max(tasks) == 12:
-                licks = [not c if (7 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
+        
         # if self.reversed:
+        #     print(np.max(tasks))
+        #     if np.max(tasks) % 16 == 0:
+        #         if np.max(tasks) == 32:
+        #             licks = [not c if (1 <= tasks[i] <= 8) or (17 <= tasks[i] <= 24) else c for i, c in enumerate(corr)]
+        #         elif np.max(tasks) == 16:
+        #             licks = [not c if 1 <= tasks[i] <= 8 else c for i, c in enumerate(corr)]
+        #     if np.max(tasks) == 5:
+        #         licks = [not c if tasks[i] > 1 else c for i, c in enumerate(corr)]
+
         #     if np.max(tasks) == 12:
         #         licks = [not c if (1 <= tasks[i] <= 3) or (7 <= tasks[i] <= 9) else c for i, c in enumerate(corr)]
-        #     else:
-        #         licks = [not c if 1 <= tasks[i] <= 3 else c for i, c in enumerate(corr)]
+
         # else:
+        #     if np.max(tasks) % 16 == 0:
+        #         if np.max(tasks) == 32:
+        #             licks = [not c if (9 <= tasks[i] <= 16) or (25 <= tasks[i] <= 32) else c for i, c in enumerate(corr)]
+        #         elif np.max(tasks) == 16:
+        #             licks = [not c if 9 <= tasks[i] <= 16 else c for i, c in enumerate(corr)]
+        #     if np.max(tasks) == 5:
+        #         licks = [not c if tasks[i] <= 1 else c for i, c in enumerate(corr)]
+
         #     if np.max(tasks) == 12:
         #         licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
-        #     if np.max(tasks) == 16:
-        #         licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
-        if np.max(tasks) == 6:
-            licks = licks = [c for i, c in enumerate(corr)]
+        # # if self.reversed:
+        # #     if np.max(tasks) == 12:
+        # #         licks = [not c if (1 <= tasks[i] <= 3) or (7 <= tasks[i] <= 9) else c for i, c in enumerate(corr)]
+        # #     else:
+        # #         licks = [not c if 1 <= tasks[i] <= 3 else c for i, c in enumerate(corr)]
+        # # else:
+        # #     if np.max(tasks) == 12:
+        # #         licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
+        # #     if np.max(tasks) == 16:
+        # #         licks = [not c if (4 <= tasks[i] <= 6) or (10 <= tasks[i] <= 12) else c for i, c in enumerate(corr)]
+        # if np.max(tasks) == 6:
+        #     licks = licks = [c for i, c in enumerate(corr)]
 
 
 
@@ -588,7 +605,6 @@ class Mouse(object):
             self.first_lick = [np.argmax(t > 1000) for t in self.recordings]
 
 
-
             #print(self.xpar['soundlist'])
 
             if rmgaps == 'Brice':
@@ -610,11 +626,12 @@ class Mouse(object):
                 self.tr_licks = list(vectors['LICKRECORD'])
                 self.tr_corr = list(vectors['correct'])
                 self.ta_type =  list(vectors['taskType'])
+            print(np.unique(self.ta_type))
 
         def __filename_parser(self, filename):
             parsed_filename = filename.split('_')
             self.tag, self.date, self.ID, self.nfile = parsed_filename
-            self.tag += '_'
+            #self.tag += '_'
 
         def __removeBadBlocks(self, threshold, bloc_size):
             if len(self.tr_corr)%bloc_size == 0:
