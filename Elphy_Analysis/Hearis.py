@@ -83,7 +83,7 @@ def mean_psycoacoustic(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16),
     plt.show()
 
     return data_to_save
-def mean_psycoacoustic_noise(mice, tag='PC', stim_freqs=np.geomspace(20, 16e3, 6), date=None, threshold=None, plot=False):
+def mean_psycoacoustic_noise(mice, tag, stim_freqs=np.geomspace(20, 16e3, 6), date=None, threshold=None, plot=False):
     """
 
     """
@@ -99,17 +99,15 @@ def mean_psycoacoustic_noise(mice, tag='PC', stim_freqs=np.geomspace(20, 16e3, 6
 
     dys=[]
     errs=[]
-    for i, noise_level in enumerate(tag):
-        print(noise_level)
+    for i, t in enumerate(tag):
         psykos = []
         curr_d = []
         for mouse in mice:
-            _, probs = mouse.psychoacoustic(tag=noise_level, stim_freqs=stim_freqs, plot=False, date=date, threshold=threshold)
-            
-            # if mouse.reversed:
-            #     probs = [p  if i in [3, 4, 5, 9, 10, 11] else 1 - p for i, p in enumerate(probs)]
+            _, probs = mouse.psychoacoustic(tag=t, stim_freqs=stim_freqs, plot=False, threshold=65)
+            print(probs)
 
             psykos.append(probs)
+
 
             #x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, probs[6:])
             #ax[0].plot(x, y, color='black', alpha=0.4, linewidth=4, markersize=6, marker='o', label=labels[i])
@@ -119,17 +117,18 @@ def mean_psycoacoustic_noise(mice, tag='PC', stim_freqs=np.geomspace(20, 16e3, 6
 
         # dys.append(np.mean(curr_d))
         # errs.append(np.std(curr_d))
-
         psykos = np.mean(np.array(psykos), axis=0)
         noisy_psykos = psykos[6:]
-        clean_psykos = psykos[:6]
+        no_noise_p.append(psykos[:6])
 
         ax.plot(stim_freqs, noisy_psykos, color=colors[i], linewidth=2, markersize=5, marker='o', label=labels[i])
+
+        np.save('{}.npy'.format(t), psykos)
         
         #x, y, d_y, x1, y1, perr = fit_sigmoid(stim_freqs, no_noise_p[:6])
-
-        
-    ax.plot(stim_freqs, clean_psykos, linewidth=2, c='gray', alpha=0.4)    
+    no_noise_p = np.array(no_noise_p)
+    np.save('no_noise.npy', np.mean(no_noise_p, axis=0))
+    ax.plot(stim_freqs, np.mean(no_noise_p, axis=0), linewidth=2, c='gray', alpha=0.4)    
     #ax[0].plot(x, y, label='fit', c='blue')
     # ax.legend()
     # errs = [0] + errs
@@ -138,7 +137,7 @@ def mean_psycoacoustic_noise(mice, tag='PC', stim_freqs=np.geomspace(20, 16e3, 6
 
     #ax[1].bar(x=['0dB', '45dB', '50dB', '55dB', '60dB'] , height=dys, color='royalblue', yerr=errs)
 
-    #plt.tight_layout()
+    plt.tight_layout()
     plt.savefig('../Output/Psychoacoustic.svg')
     plt.show()
 
@@ -247,7 +246,7 @@ def all_psycho(mice, tag=['PC'], stim_freqs=np.geomspace(6e3, 16e3, 16), thresho
     dys = []
     shift_errors = []
     for i, mouse in enumerate(mice):
-        f, p = mouse.psychoacoustic(tag=tag, stim_freqs=stim_freqs, threshold=threshold, plot=False)
+        f, p = mouse.psychoacoustic(tag=tag[0], stim_freqs=stim_freqs, threshold=threshold, plot=False)
 
         # x, y, d_y, x1, y1 = fit_sigmoid(stim_freqs, p)
 
@@ -487,9 +486,33 @@ def histogram_slopes_PC(mice, tag='PC', stim_freqs=np.geomspace(6e3, 16e3, 16), 
 # Collab perf
 if __name__ == '__main__':
     
-    mice_id = batch.id_first_batch
-    mice = [Mouse(path='/home/anverdie/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['PCAMN45', 'PCAMN50'], collab=False, rmgaps='Antonin', verbose=True, linkday=True, gsheet=True) for i in mice_id]
-    mean_psycoacoustic_noise(mice, tag=['PCAMN45', 'PCAMN50'], threshold=65, stim_freqs=np.geomspace(20, 200, 6))
+    mice_id = batch.id_fifth_batch
+    mice = [Mouse(path='/home/anverdie/share/gaia/Data/Behavior/Antonin/{}'.format(i), tag=['DIS'], collab=False, rmgaps='Antonin', verbose=True, linkday=True, gsheet=False) for i in mice_id] 
+    all_perfs(mice)
+    all_psycho(mice)
+
+
+
+    # volumes = np.linspace(15, 65, 16)
+    # mean_freqs = []
+    # for mouse in mice:
+    #     f, p = mouse.psychoacoustic(tag='PC1345-12345', stim_freqs=np.linspace(15, 65, 16), threshold=80, plot=False)
+    #     mean_freqs.append(p)
+    #     plt.plot(np.linspace(15, 65, 16), p, '-', color='blue', linewidth=2)
+    # mean_freqs = np.array(mean_freqs)
+    # mean_freqs = np.mean(mean_freqs, axis=0)
+    # print(mean_freqs.shape)
+    # plt.plot(np.linspace(15, 65, 16), mean_freqs, 'o-', color='goldenrod')
+    # plt.xlabel('Harm 2. amplitude')
+    # plt.ylabel('Prob. of licking')
+    # plt.title('Task 5')
+
+
+    # plt.savefig('Task5_all.svg')
+    # plt.show()
+
+    # np.save('mice_panel_E.npy', mice)
+    # mean_psycoacoustic_noise(mice, tag=['PCAMN45', 'PCAMN50', 'PCAMN55', 'PCAMN60'], threshold=65, stim_freqs=np.geomspace(20, 200, 6))
 
 
     # plt.figure(figsize=(10, 8))
