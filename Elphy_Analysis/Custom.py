@@ -370,6 +370,8 @@ class Mouse(object):
         
         P_lick = {key:sum(tasks*licks == key)/sum(tasks == key) for key in list(set(tasks))}
 
+        P_lick.pop(0, None)
+
         sorted_P_licks = sorted(P_lick.items())
         frequencies, prob = zip(*sorted_P_licks)
 
