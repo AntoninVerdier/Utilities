@@ -966,60 +966,61 @@ def read_behavior(fname, verbose=False):
 
     nt, = ef.episodes[0].channels[0].data.shape
     rec = np.zeros((ef.n_episodes, nt))
-    dates = [None] * ef.n_episodes
-    ep_info = [{}] * ef.n_episodes
+    dates = []
+    ep_info = []
     vectors, xpar = {}, {}
     menu_par = None
 
     # loop over episodes
     for i in range(-1, ef.n_episodes):
-        if range == -1:
-            objects = ef.initial_objects
-        else:
-            ep = ef.episodes[i]
-            rec[i] = ep.channels[0].data
-            dates[i] = ep.date
-            objects = ep.objects
+        try: 
 
-        # loop over objects belonging to this episode
-        for obj in objects:
-            if isinstance(obj, ElphyFile.DBrecord):
-                if i == -1:
-                    pass
-                    #print("Ignoring DBrecord before first episode", obj.dict)
-                elif obj.name == 'PG0.MPAR2':
-                    # Parameters used to be saved in a DBrecord, now they
-                    # are saved in Memo table
-                    if menu_par is None:
-                        menu_par = obj.dict
-                    else:
-                        pass
-                        # print("Problem ! Several set of parameters in file")
-                elif obj.name == 'PG0.EPREPORT':
-                    if ep_info[i] == {}:
-                        ep_info[i] = obj.dict
-                    else:
-                        # print('Several info DBrecord in episode', i, '!')
-                        # print('-> Keeping:', ep_info[i])
-                        # print('-> Ignoring:', obj.dict)
-                        pass
-                else:
-                    raise Exception(
-                        'Unexpected DBrecord with name ' + obj.name)
-            elif isinstance(obj, ElphyFile.Vector):
-                vectors[obj.name[4:]] = obj.data
-            elif isinstance(obj, ElphyFile.Memo):
-                if obj.name == 'PG0.PPAR2':
-                    _read_behavior_parameters(xpar, obj.memo)
-                elif obj.name == 'PG0.IMAGELIST':
-                    xpar['imagelist'] = obj.memo
-                elif obj.name == 'PG0.SOUNDLIST':
-                    xpar['soundlist'] = obj.memo
-                else:
-                    raise Exception('Unexpected memo with name ' + obj.name)
+            if range == -1:
+                objects = ef.initial_objects
             else:
-                #print('Object of type ' + str(type(obj)) + ' not handled by function read_beavior')
-                pass
+                ep = ef.episodes[i]
+                rec[i] = ep.channels[0].data
+                dates.append(ep.date)
+                objects = ep.objects
+                
+
+            # loop over objects belonging to this episode
+            for obj in objects:
+                if isinstance(obj, ElphyFile.DBrecord):
+                    if i == -1:
+                        pass
+                        #print("Ignoring DBrecord before first episode", obj.dict)
+                    elif obj.name == 'PG0.MPAR2':
+                        # Parameters used to be saved in a DBrecord, now they
+                        # are saved in Memo table
+                        if menu_par is None:
+                            menu_par = obj.dict
+                        else:
+                            pass
+                            # print("Problem ! Several set of parameters in file")
+                    elif obj.name == 'PG0.EPREPORT':
+
+                        ep_info.append(obj.dict)
+            
+                    else:
+                        raise Exception(
+                            'Unexpected DBrecord with name ' + obj.name)
+                elif isinstance(obj, ElphyFile.Vector):
+                    vectors[obj.name[4:]] = obj.data
+                elif isinstance(obj, ElphyFile.Memo):
+                    if obj.name == 'PG0.PPAR2':
+                        _read_behavior_parameters(xpar, obj.memo)
+                    elif obj.name == 'PG0.IMAGELIST':
+                        xpar['imagelist'] = obj.memo
+                    elif obj.name == 'PG0.SOUNDLIST':
+                        xpar['soundlist'] = obj.memo
+                    else:
+                        raise Exception('Unexpected memo with name ' + obj.name)
+                else:
+                    #print('Object of type ' + str(type(obj)) + ' not handled by function read_beavior')
+                    pass
+        except ValueError:
+            print('A session has been skipped')
     # Merge dates and ep_info into vectors
     for key in ep_info[0].keys():
         vectors[key] = np.array([x[key] for x in ep_info])
