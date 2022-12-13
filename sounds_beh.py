@@ -44,22 +44,22 @@ if not os.path.exists(path):
 # 	step.save_wav(name='Steps_{}_6000Hz_16000Hz_{}ms_70dB'.format(s, duration), path=path)
 
 # Generate harmonic 
-struc = [(4e3,), (4e3, 20e3), (4e3, 12e3, 20e3), (4e3, 8e3, 12e3, 20e3), (4e3, 8e3, 12e3, 16e3, 20e3), (4e3, 12e3, 16e3, 20e3)]
-names = ['1', '15', '135', '1235', '12345', '1345']
-for i, h in enumerate(struc):
-	fmul = Sound(samplerate=samplerate, amplitude=65)
-	fmul.multi_freqs(h, duration=duration)
-	fmul.save_wav(name='Harmonics_{}_4kHz_65dB'.format(names[i]), path=path, bit16=True)
+# struc = [(4e3,), (4e3, 20e3), (4e3, 12e3, 20e3), (4e3, 8e3, 12e3, 20e3), (4e3, 8e3, 12e3, 16e3, 20e3), (4e3, 12e3, 16e3, 20e3)]
+# names = ['1', '15', '135', '1235', '12345', '1345']
+# for i, h in enumerate(struc):
+# 	fmul = Sound(samplerate=samplerate, amplitude=65)
+# 	fmul.multi_freqs(h, duration=duration)
+# 	fmul.save_wav(name='Harmonics_{}_4kHz_65dB'.format(names[i]), path=path, bit16=True)
 	
-# # Generate harmonic psychophysic
-volumes = np.linspace(15, 65, 16)
-for v in volumes:
-	fmul = Sound(samplerate=samplerate, amplitude=amplitude)
-	fmul.multi_freqs((4e3, 12e3, 16e3, 20e3), duration=duration)
-	fmulvol = Sound(samplerate=samplerate, amplitude=v)
-	fmulvol.pure_tone(8e3, duration=duration)
-	final = fmul * fmulvol
-	final.save_wav(name='Harmonics_1345_4kHz_65dB_{}'.format(int(v*100)), path=path, bit16=True)
+# # # Generate harmonic psychophysic
+# volumes = np.linspace(15, 65, 16)
+# for v in volumes:
+# 	fmul = Sound(samplerate=samplerate, amplitude=amplitude)
+# 	fmul.multi_freqs((4e3, 12e3, 16e3, 20e3), duration=duration)
+# 	fmulvol = Sound(samplerate=samplerate, amplitude=v)
+# 	fmulvol.pure_tone(8e3, duration=duration)
+# 	final = fmul * fmulvol
+# 	final.save_wav(name='Harmonics_1345_4kHz_65dB_{}'.format(int(v*100)), path=path, bit16=True)
 
 # Generate toeplitz reg 
 # path = 'toeplitz6-16'
@@ -75,5 +75,33 @@ for v in volumes:
 # 	#color.noise(duration=duration)
 # 	color.save_wav(name='PN_{}'.format(int(f)), path=path)
 
+
+# s = Sound(samplerate=samplerate, amplitude=amplitude)
+# s.amplitude_modulation(4e3, 79, duration=5000)
+# noise = Sound(samplerate=samplerate, amplitude=55)
+# noise.noise(duration=5000)
+# final = s * noise
+# final.save_wav(name='am_{}'.format(int(100)), path='PT_film')
+
+# AM toeplitz
+# for fam in np.geomspace(2e3, 12e3, 16):
+# 	s = Sound(samplerate=samplerate, amplitude=amplitude)
+# 	s.pure_tone(int(fam), duration=5000)
+# 	s.save_wav(name='pt_{}'.format(int(fam)), path='PT_film')
+
+struc = ([500, 1000, 2000, 4000, 8000],
+	     [2000, 1000, 2000, 4000, 8000],
+	     [4000, 1000, 2000, 4000, 8000],
+	     [8000, 1000, 2000, 4000, 8000],
+	     [16e3, 1000, 2000, 4000, 8000])
+
+
+for i, s in enumerate(struc):
+	fmul = Sound(samplerate=samplerate, amplitude=65)
+	fmul.multi_freqs(s, duration=500)
+	color = Sound(samplerate=samplerate, amplitude=70)
+	color.colored_noise(duration=duration, type='pink', freqs=[2000, 3000])
+	conc_noise = color * fmul
+	conc_noise.save_wav('colored_hamronics.wav', path='Harm_color_70dB')
 
 
